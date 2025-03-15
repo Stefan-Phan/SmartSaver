@@ -5,8 +5,9 @@ exports.getRecommendation = async (req, res) => {
   try {
     const { userId, question, category, amount, mode } = req.body;
 
+    // Fetch user's weekly limit
     db.query(
-      "SELECT WeeklyLimit FROM User Where ID = ?",
+      "SELECT WeeklyLimit FROM User WHERE ID = ?",
       [userId],
       (err, user) => {
         if (err) {
@@ -15,8 +16,12 @@ exports.getRecommendation = async (req, res) => {
             .status(500)
             .json({ success: false, error: "Database error" });
         }
+
+        // Calculate total spend for 'Expense' category (excluding 'Saving' category)
         db.query(
-          'SELECT SUM(Amount) as totalSpent FROM Transaction WHERE UserID = ? AND TYPE = "Expense"',
+          "SELECT SUM(t.Amount) as totalSpent FROM Transaction t " +
+            "JOIN Category c ON t.CategoryID = c.ID " +
+            'WHERE t.UserID = ? AND c.Name != "Saving"',
           [userId],
           (err, spentResult) => {
             if (err) {
@@ -25,6 +30,8 @@ exports.getRecommendation = async (req, res) => {
                 .status(500)
                 .json({ success: false, error: "Database error" });
             }
+
+            // Fetch current savings and saving goals
             db.query(
               "SELECT CurrentAmount, SavingGoals FROM Saving WHERE UserID = ?",
               [userId],
@@ -35,16 +42,19 @@ exports.getRecommendation = async (req, res) => {
                     .status(500)
                     .json({ success: false, error: "Database error" });
                 }
+
+                // Prepare user data
                 const userData = {
                   weeklyLimit: user[0]?.WeeklyLimit || 0,
-                  totalSpent: spentResult[0]?.totalSpent || 0,
+                  totalSpent: spentResult[0]?.totalSpent || 0, // Total spent excluding 'Saving' transactions
                   totalSaved: saving[0]?.CurrentAmount || 0,
                   savingGoals: saving[0]?.SavingGoals || 0,
                 };
 
-                // Get AI Recommendation
+                // Get AI recommendation
                 getAIRecommendation(userData, question, category, amount, mode)
                   .then((recommendation) => {
+                    // Insert recommendation into the AIRecommendation table
                     db.query(
                       "INSERT INTO AIRecommendation (UserID, Question, Recommendation, Category, Amount) VALUES (?, ?, ?, ?, ?)",
                       [userId, question, recommendation, category, amount],
@@ -55,6 +65,7 @@ exports.getRecommendation = async (req, res) => {
                             .status(500)
                             .json({ success: false, error: "Database error" });
                         }
+                        // Send response with recommendation
                         res.json({ success: true, recommendation });
                       }
                     );
@@ -84,8 +95,9 @@ exports.getUserRecommendationHistory = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    // Fetch recommendation history
     db.query(
-      "SELECT * FROM AIRecommendation WHERE UserID = ? ORDER BY CreatedAT DESC",
+      "SELECT * FROM AIRecommendation WHERE UserID = ? ORDER BY CreatedAt DESC",
       [userId],
       (err, history) => {
         if (err) {

@@ -60,3 +60,31 @@ exports.deleteUser = (req, res) => {
     res.json({ message: "User deleted successfully " });
   });
 };
+
+// Update WeeklyLimit
+exports.updateWeeklyLimit = (req, res) => {
+  const userIdFromToken = req.userId;
+  const userIdFromParams = req.params.id;
+  const { WeeklyLimit } = req.body;
+
+  // Compare the user ID from the URL with the user ID from the token
+  if (parseInt(userIdFromParams) !== parseInt(userIdFromToken)) {
+    return res
+      .status(403)
+      .json({ message: "You are not authorized to update this user" });
+  }
+
+  const sql = "UPDATE User SET WeeklyLimit = ? WHERE ID = ?";
+
+  db.query(sql, [WeeklyLimit, userIdFromParams], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "Weekly limit updated successfully!" });
+  });
+};
