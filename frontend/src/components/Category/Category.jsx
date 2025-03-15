@@ -6,6 +6,13 @@ import {
   deleteCategory,
 } from "../../api/categoryApi";
 import { getTransactions } from "../../api/transactionApi";
+import "./Category.css"; // Import the CSS file
+import {
+  FaTachometerAlt,
+  FaPlusCircle,
+  FaQuestionCircle,
+  FaMoneyBillAlt,
+} from "react-icons/fa";
 
 function CategoryPage() {
   const [categories, setCategories] = useState([]);
@@ -118,115 +125,76 @@ function CategoryPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <Link
-            to="/dashboard"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
+    <div className="category-page-container">
+      <div className="category-page-content">
+        <div className="category-header">
+          <Link to="/dashboard" className="category-back-button">
             Back to dashboard
           </Link>
-          <h2 className="text-2xl font-bold">Categories</h2>
-
-          <Link
-            to="/transaction"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
+          <h2 className="category-title">Categories</h2>
+          <Link to="/transaction" className="category-back-button">
             Back to Transactions
           </Link>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="category-error-message">{error}</div>}
 
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="text-lg font-medium mb-3">Add New Category</h3>
-          <form
-            onSubmit={handleAddCategory}
-            className="flex flex-col md:flex-row gap-4"
-          >
-            <div className="flex-grow">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category Name
-              </label>
+        <div className="category-add-form">
+          <h3 className="category-add-title">Add New Category</h3>
+          <form onSubmit={handleAddCategory} className="category-form">
+            <div className="form-control">
+              <label htmlFor="categoryName">Category Name</label>
               <input
                 type="text"
                 name="Name"
                 placeholder="Enter category name"
                 value={newCategory.Name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="category-input"
               />
             </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Add Category
-              </button>
-            </div>
+            <button type="submit" className="btn">
+              Add Category
+            </button>
           </form>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-10">
-            <div className="spinner-border text-blue-500" role="status">
-              <span className="sr-only">Loading...</span>
-            </div>
-            <p className="mt-2 text-gray-600">Loading categories...</p>
-          </div>
+          <div className="loading-container">Loading categories...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
+          <div className="category-table-container">
+            <table className="category-table">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Usage Count
-                  </th>
-                  <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Amount
-                  </th>
-                  <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                <tr>
+                  <th>Category</th>
+                  <th>Usage Count</th>
+                  <th>Total Amount</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {categories.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="4"
-                      className="px-6 py-4 text-center text-gray-500"
-                    >
+                    <td colSpan="4" className="no-categories">
                       No categories found. Add your first category above.
                     </td>
                   </tr>
                 ) : (
                   categories.map((category) => (
-                    <tr key={category.ID} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">
-                        {category.Name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={category.ID}>
+                      <td>{category.Name}</td>
+                      <td>
                         {categoryUsage[category.ID]?.count || 0} transaction(s)
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td>
                         $
                         {categoryUsage[category.ID]?.total?.toFixed(2) ||
                           "0.00"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td>
                         <button
                           onClick={() => handleDeleteCategory(category.ID)}
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none"
+                          className="delete-category-button"
                           disabled={categoryUsage[category.ID]?.count > 0}
                           title={
                             categoryUsage[category.ID]?.count > 0
@@ -244,6 +212,20 @@ function CategoryPage() {
             </table>
           </div>
         )}
+      </div>
+      <div className="category-links">
+        <Link to="/category" className="category-link">
+          <FaPlusCircle /> Add more category
+        </Link>
+        <Link to="/ask-ai" className="category-link">
+          <FaQuestionCircle /> AskAI
+        </Link>
+        <Link to="/income" className="category-link">
+          <FaMoneyBillAlt /> Income
+        </Link>
+        <Link to="/dashboard" className="category-link">
+          <FaTachometerAlt /> Dashboard
+        </Link>
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
-.transaction-page-container {
+/* Income.css */
+
+.income-page-container {
   background-color: #f7f7f7;
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -11,7 +13,7 @@
 .btn {
   cursor: pointer;
   background-color: #9c88ff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Simplified box-shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #fff;
   border: 0;
   display: block;
@@ -34,7 +36,7 @@
 
 .list li {
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Simplified box-shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #333;
   display: flex;
   justify-content: space-between;
@@ -45,10 +47,6 @@
 
 .list li.plus {
   border-right: 5px solid #2ecc71;
-}
-
-.list li.minus {
-  border-right: 5px solid #c0392b;
 }
 
 .delete-btn {
@@ -79,42 +77,38 @@ input[type="number"] {
   font-size: 16px;
   padding: 10px;
   width: 100%;
-  box-sizing: border-box; /* Added box-sizing */
+  box-sizing: border-box;
 }
 
-.transaction-page-content {
+.income-page-content {
   flex-grow: 1;
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.transaction-links {
+.income-links {
   text-align: center;
   padding: 20px 0;
-  white-space: nowrap; /* Prevent links from wrapping to multiple lines */
+  white-space: nowrap;
 }
 
-.transaction-link {
+.income-link {
   display: inline-flex;
   align-items: center;
-  margin: 0 10px; /* Add spacing between links */
-  text-decoration: none; /* Remove underline */
-  color: black; /* Make text black */
+  margin: 0 10px;
+  text-decoration: none;
+  color: black;
 }
 
-.transaction-link svg {
-  margin-right: 5px; /* Add spacing between icon and text */
+.income-link svg {
+  margin-right: 5px;
 }
 
 .form-control {
   margin-bottom: 10px;
 }
 
-.transaction-form-select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
+.income-error-message {
+  color: red;
 }

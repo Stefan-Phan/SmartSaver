@@ -4,6 +4,14 @@ import { getIncomes } from "../../api/incomeApi";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
 import { Link } from "react-router-dom";
+import "./Dashboard.css";
+import {
+  FaListAlt,
+  FaPlusCircle,
+  FaUser,
+  FaQuestionCircle,
+  FaMoneyBillAlt,
+} from "react-icons/fa"; // Import icons
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -18,6 +26,8 @@ function DashboardPage() {
     useState([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState(null);
   const [totalBalance, setTotalBalance] = useState(0);
+  const [incomeTotal, setIncomeTotal] = useState(0);
+  const [expenseTotal, setExpenseTotal] = useState(0);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -98,15 +108,18 @@ function DashboardPage() {
   }, [transactions, categories]);
 
   useEffect(() => {
-    let incomeTotal = incomes.reduce(
+    const incomeSum = incomes.reduce(
       (acc, income) => acc + parseFloat(income.Amount),
       0
     );
-    let transactionTotal = transactions.reduce(
+    const expenseSum = transactions.reduce(
       (acc, transaction) => acc + parseFloat(transaction.Amount),
       0
     );
-    setTotalBalance(incomeTotal - transactionTotal);
+
+    setIncomeTotal(incomeSum);
+    setExpenseTotal(expenseSum);
+    setTotalBalance(incomeSum - expenseSum);
   }, [incomes, transactions]);
 
   const handleSliceClick = (event, elements) => {
@@ -134,56 +147,60 @@ function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-center mb-6">Dashboard</h2>
+    <div className="dashboard-container">
+      <div className="dashboard-content">
+        <h2 className="dashboard-title">Dashboard</h2>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="balance-display">
+          <h4>Your Balance</h4>
+          <h1 id="balance">${totalBalance.toFixed(2)}</h1>
+        </div>
+
+        <div className="inc-exp-container">
+          <div>
+            <h4>Income</h4>
+            <p id="money-plus" className="money plus">
+              +${incomeTotal.toFixed(2)}
+            </p>
           </div>
-        )}
-
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          Total Balance: ${totalBalance.toFixed(2)}
+          <div>
+            <h4>Expense</h4>
+            <p id="money-minus" className="money minus">
+              -${expenseTotal.toFixed(2)}
+            </p>
+          </div>
         </div>
 
         {chartData && (
-          <div className="mb-6">
+          <div className="chart-container">
             <Pie data={chartData} options={{ onClick: handleSliceClick }} />
           </div>
         )}
 
         {selectedCategoryTransactions.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium mb-3">
+          <div className="category-transactions">
+            <h3 className="category-title">
               Transactions for {selectedCategoryName}
             </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
+            <div className="transactions-table-container">
+              <table className="transactions-table">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
+                  <tr className="table-header">
+                    <th className="table-header-cell">Name</th>
+                    <th className="table-header-cell">Amount</th>
+                    <th className="table-header-cell">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {selectedCategoryTransactions.map((transaction) => (
-                    <tr key={transaction.ID} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {transaction.Name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={transaction.ID} className="table-row">
+                      <td className="table-cell">{transaction.Name}</td>
+                      <td className="table-cell">
                         ${parseFloat(transaction.Amount).toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="table-cell">
                         {formatDate(transaction.Date)}
                       </td>
                     </tr>
@@ -194,36 +211,23 @@ function DashboardPage() {
           </div>
         )}
       </div>
-      <Link
-        to="/transaction"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        Transaction Detail
-      </Link>
-      <Link
-        to="/category"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        Add more category
-      </Link>
-      <Link
-        to="/user-profile"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        UserProfile
-      </Link>
-      <Link
-        to="/ask-ai"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        AskAI
-      </Link>
-      <Link
-        to="/income"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        Income
-      </Link>
+      <div className="dashboard-links">
+        <Link to="/transaction" className="dashboard-link">
+          <FaListAlt /> Transaction Detail
+        </Link>
+        <Link to="/category" className="dashboard-link">
+          <FaPlusCircle /> Add more category
+        </Link>
+        <Link to="/user-profile" className="dashboard-link">
+          <FaUser /> UserProfile
+        </Link>
+        <Link to="/ask-ai" className="dashboard-link">
+          <FaQuestionCircle /> AskAI
+        </Link>
+        <Link to="/income" className="dashboard-link">
+          <FaMoneyBillAlt /> Income
+        </Link>
+      </div>
     </div>
   );
 }
