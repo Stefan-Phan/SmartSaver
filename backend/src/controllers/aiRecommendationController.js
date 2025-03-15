@@ -3,7 +3,8 @@ const db = require("../config/db");
 
 exports.getRecommendation = async (req, res) => {
   try {
-    const { userId, question, category, amount, mode } = req.body;
+    const userId = req.userId;
+    const { question, mode } = req.body;
 
     // Fetch user's weekly limit
     db.query(
@@ -21,7 +22,7 @@ exports.getRecommendation = async (req, res) => {
         db.query(
           "SELECT SUM(t.Amount) as totalSpent FROM Transaction t " +
             "JOIN Category c ON t.CategoryID = c.ID " +
-            'WHERE t.UserID = ? AND c.Name != "Saving"',
+            "WHERE t.UserID = ? AND c.Name != 'Saving'",
           [userId],
           (err, spentResult) => {
             if (err) {
@@ -31,13 +32,13 @@ exports.getRecommendation = async (req, res) => {
                 .json({ success: false, error: "Database error" });
             }
 
-            // Fetch current savings and saving goals
+            // Fetch total income
             db.query(
-              "SELECT CurrentAmount, SavingGoals FROM Saving WHERE UserID = ?",
+              "SELECT SUM(i.Amount) AS totalIncome FROM Income i WHERE i.UserID = ?",
               [userId],
-              (err, saving) => {
+              (err, incomeResult) => {
                 if (err) {
-                  console.error("Error fetching saving data:", err);
+                  console.error("Error fetching income data:", err);
                   return res
                     .status(500)
                     .json({ success: false, error: "Database error" });
@@ -46,18 +47,19 @@ exports.getRecommendation = async (req, res) => {
                 // Prepare user data
                 const userData = {
                   weeklyLimit: user[0]?.WeeklyLimit || 0,
-                  totalSpent: spentResult[0]?.totalSpent || 0, // Total spent excluding 'Saving' transactions
-                  totalSaved: saving[0]?.CurrentAmount || 0,
-                  savingGoals: saving[0]?.SavingGoals || 0,
+                  totalSpent: spentResult[0]?.totalSpent || 0,
+                  totalIncome: incomeResult[0]?.totalIncome || 0,
                 };
 
+                console.log(userData);
+
                 // Get AI recommendation
-                getAIRecommendation(userData, question, category, amount, mode)
+                getAIRecommendation(userData, question, mode)
                   .then((recommendation) => {
                     // Insert recommendation into the AIRecommendation table
                     db.query(
-                      "INSERT INTO AIRecommendation (UserID, Question, Recommendation, Category, Amount) VALUES (?, ?, ?, ?, ?)",
-                      [userId, question, recommendation, category, amount],
+                      "INSERT INTO AIRecommendation (UserID, Question, Recommendation) VALUES (?, ?, ?)",
+                      [userId, question, recommendation],
                       (err, result) => {
                         if (err) {
                           console.error("Error inserting recommendation:", err);

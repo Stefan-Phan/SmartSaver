@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 // Get all categories for a user
 exports.getAllCategories = (req, res) => {
-  const userId = req.userId; // Extract user ID from token
+  const userId = req.userId;
   const sql = "SELECT * FROM Category WHERE UserID = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {

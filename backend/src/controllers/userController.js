@@ -27,7 +27,7 @@ exports.addUser = (req, res) => {
 
 // Get One User
 exports.getOneUser = (req, res) => {
-  const ID = req.params.id;
+  const ID = req.userId;
   const sql = "SELECT * FROM User WHERE ID = ?";
 
   db.query(sql, [ID], (err, result) => {
@@ -64,19 +64,11 @@ exports.deleteUser = (req, res) => {
 // Update WeeklyLimit
 exports.updateWeeklyLimit = (req, res) => {
   const userIdFromToken = req.userId;
-  const userIdFromParams = req.params.id;
   const { WeeklyLimit } = req.body;
-
-  // Compare the user ID from the URL with the user ID from the token
-  if (parseInt(userIdFromParams) !== parseInt(userIdFromToken)) {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to update this user" });
-  }
 
   const sql = "UPDATE User SET WeeklyLimit = ? WHERE ID = ?";
 
-  db.query(sql, [WeeklyLimit, userIdFromParams], (err, result) => {
+  db.query(sql, [WeeklyLimit, userIdFromToken], (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
