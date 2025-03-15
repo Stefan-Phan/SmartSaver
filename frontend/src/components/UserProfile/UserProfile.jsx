@@ -1,7 +1,10 @@
+// UserProfile.jsx
 import React, { useState, useEffect } from "react";
 import { updateWeeklyLimit } from "../../api/userApi";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import "./UserProfile.css"; // Import the CSS file
+import { FaTachometerAlt } from "react-icons/fa";
 
 function UserProfile() {
   const [user, setUser] = useState(null);
@@ -59,19 +62,15 @@ function UserProfile() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="loading-container">Loading...</div>;
   }
 
   if (!user && !isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
+      <div className="user-profile-container">
+        <div className="user-profile-content">
+          <h2 className="user-profile-title">User Profile</h2>
+          {error && <div className="user-profile-error-message">{error}</div>}
           <p>User data not found.</p>
         </div>
       </div>
@@ -79,61 +78,47 @@ function UserProfile() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+    <div className="user-profile-container">
+      <div className="user-profile-content">
+        <h3 className="user-profile-title">User Profile</h3>
+        <Link to="/dashboard" className="user-profile-dashboard-link">
+          <FaTachometerAlt /> Dashboard
+        </Link>
+        {error && <div className="user-profile-error-message">{error}</div>}
 
         {successMessage && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {successMessage}
-          </div>
+          <div className="user-profile-success-message">{successMessage}</div>
         )}
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Name:
-          </label>
-          <p className="mt-1">{user.Name}</p>
-        </div>
+        <div className="user-profile-info">
+          <div className="info-item">
+            <label className="info-label">Name:</label>
+            <p className="info-value">{user.Name}</p>
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Email:
-          </label>
-          <p className="mt-1">{user.Email}</p>
-        </div>
+          <div className="info-item">
+            <label className="info-label">Email:</label>
+            <p className="info-value">{user.Email}</p>
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Weekly Limit:
-          </label>
-          <input
-            type="number"
-            value={weeklyLimit}
-            onChange={handleWeeklyLimitChange}
-            className="mt-1 p-2 border rounded w-full"
-          />
+          <div className="info-item">
+            <label className="info-label">Weekly Limit:</label>
+            <input
+              type="number"
+              value={weeklyLimit}
+              onChange={handleWeeklyLimitChange}
+              className="info-input"
+            />
+          </div>
         </div>
 
         <button
           onClick={handleUpdateWeeklyLimit}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="user-profile-update-button"
         >
           Update Weekly Limit
         </button>
       </div>
-      <Link
-        to="/dashboard"
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        Dashboard
-      </Link>
     </div>
   );
 }
