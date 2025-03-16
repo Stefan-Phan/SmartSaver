@@ -1,9 +1,7 @@
-/* UserProfile.css */
-
 .user-profile-container {
   background-color: #f7f7f7;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   min-height: 100vh;
   margin: 0;
@@ -94,4 +92,34 @@
   text-align: center;
   padding: 20px;
   color: #555;
+}
+
+.dashboard-links {
+  display: flex;
+  justify-content: center;
+  background-color: #f0f0f0;
+  padding: 10px 0;
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dashboard-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 15px;
+  margin: 0 10px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.dashboard-link:hover {
+  background-color: #e0e0e0;
+}
+
+.dashboard-link svg {
+  margin-right: 5px;
 }

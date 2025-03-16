@@ -1,13 +1,12 @@
-/* Category.css */
-
 .category-page-container {
   background-color: #f7f7f7;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: auto;
   margin: 0;
   font-family: "Lato", sans-serif;
   font-size: 18px;
+  align-items: center;
 }
 
 .category-page-content {
@@ -22,7 +21,7 @@
 
 .category-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 20px;
 }
@@ -31,14 +30,7 @@
   text-align: center;
   margin: 0;
   color: #333;
-}
-
-.category-back-button {
-  padding: 10px 15px;
-  background-color: #9c88ff;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
+  font-size: 24px; /* Match header size */
 }
 
 .category-error-message {
@@ -60,15 +52,30 @@
 }
 
 .form-control {
-  margin-bottom: 10px;
+  margin-bottom: 15px; /* Match form control margin */
+}
+
+.form-control label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600; /* Match label font weight */
+  color: #333;
 }
 
 .category-input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #ced4da; /* Match input border */
   border-radius: 4px;
   box-sizing: border-box;
+  font-size: 16px; /* Match input font size */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; /* Match input transition */
+}
+
+.category-input:focus {
+  outline: none;
+  border-color: #80bdff; /* Match input focus border */
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Match input focus shadow */
 }
 
 .btn {
@@ -140,20 +147,32 @@
   color: #888;
 }
 
-.category-links {
-  text-align: center;
-  padding: 20px 0;
-  white-space: nowrap;
+.dashboard-links {
+  display: flex;
+  justify-content: center;
+  background-color: #f0f0f0;
+  padding: 10px 0;
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.category-link {
-  display: inline-flex;
+.dashboard-link {
+  display: flex;
   align-items: center;
+  padding: 8px 15px;
   margin: 0 10px;
   text-decoration: none;
-  color: black;
+  color: #333;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
-.category-link svg {
+.dashboard-link:hover {
+  background-color: #e0e0e0;
+}
+
+.dashboard-link svg {
   margin-right: 5px;
 }

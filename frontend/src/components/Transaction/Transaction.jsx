@@ -5,97 +5,110 @@ import {
   deleteTransaction,
   getCategories,
 } from "../../api/transactionApi";
-
+import { getIncomes, addIncome, deleteIncome } from "../../api/incomeApi";
+import { Link } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaPlusCircle,
   FaQuestionCircle,
   FaMoneyBillAlt,
+  FaTrashAlt,
+  FaListAlt,
+  FaUser,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
 import "./Transaction.css";
 
 function TransactionPage() {
   const [transactions, setTransactions] = useState([]);
+  const [incomes, setIncomes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [token, setToken] = useState("");
+  const [error, setError] = useState("");
+  const [combinedEntries, setCombinedEntries] = useState([]);
+
   const [newTransaction, setNewTransaction] = useState({
     Name: "",
     Amount: "",
     CategoryName: "",
-    Date: new Date().toISOString().split("T")[0],
   });
-  const [token, setToken] = useState("");
-  const [error, setError] = useState("");
-  const [categories, setCategories] = useState([]);
+
+  const [newIncome, setNewIncome] = useState({
+    Source: "",
+    Amount: "",
+    Notes: "",
+  });
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-    }
+    if (storedToken) setToken(storedToken);
   }, []);
 
   useEffect(() => {
     if (token) {
-      fetchTransactions();
-      fetchCategories();
+      fetchData();
     }
   }, [token]);
 
-  const fetchTransactions = async () => {
+  const fetchData = async () => {
     try {
-      const data = await getTransactions(token);
-      setTransactions(data);
+      const transactionsData = await getTransactions(token);
+      const incomesData = await getIncomes(token);
+      const categoriesData = await getCategories(token);
+
+      setTransactions(transactionsData);
+      setIncomes(incomesData);
+      setCategories(categoriesData);
+
+      const combined = [...transactionsData, ...incomesData];
+
+      const sortedEntries = combined.sort((a, b) => {
+        return new Date(b.CreatedAt) - new Date(a.CreatedAt);
+      });
+
+      setCombinedEntries(sortedEntries);
+
       setError("");
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const data = await getCategories(token);
-      setCategories(data);
-      setError("");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
+  const handleInputChange = (e, setter) => {
+    setter((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
-      if (!newTransaction.CategoryName) {
-        setError("Please select a category.");
-        return;
-      }
-
       const selectedCategory = categories.find(
         (cat) => cat.Name === newTransaction.CategoryName
       );
-
-      if (!selectedCategory) {
-        setError("Selected category not found.");
-        return;
-      }
-
-      const transactionToSave = {
+      if (!selectedCategory) return setError("Selected category not found.");
+      await addTransaction(token, {
         ...newTransaction,
         CategoryID: selectedCategory.ID,
-      };
-
-      await addTransaction(token, transactionToSave);
-      fetchTransactions();
+      });
+      fetchData();
       setNewTransaction({
         Name: "",
         Amount: "",
         CategoryName: "",
-        Date: new Date().toISOString().split("T")[0],
       });
-      setError("");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleAddIncome = async (e) => {
+    e.preventDefault();
+    try {
+      await addIncome(newIncome, token);
+      fetchData();
+      setNewIncome({
+        Source: "",
+        Amount: "",
+        Notes: "",
+      });
     } catch (err) {
       setError(err.message);
     }
@@ -104,102 +117,134 @@ function TransactionPage() {
   const handleDeleteTransaction = async (id) => {
     try {
       await deleteTransaction(token, id);
-      fetchTransactions();
-      setError("");
+      fetchData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteIncome = async (id) => {
+    try {
+      await deleteIncome(id, token);
+      fetchData();
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="transaction-page-container">
-      <div className="transaction-page-content">
-        <h3 className="transaction-page-title">Expense History</h3>
-        <ul id="list" className="list">
-          {transactions.map((transaction) => (
-            <li
-              key={transaction.ID}
-              className={transaction.Amount > 0 ? "minus" : "plus"}
-            >
-              {transaction.Name}{" "}
-              <span>
-                {transaction.Amount < 0 ? "-" : "+"}$
-                {Math.abs(parseFloat(transaction.Amount).toFixed(2))}
-              </span>
-              <button
+    <div>
+      <div className="dashboard-links">
+        <Link to="/transaction" className="dashboard-link">
+          <FaListAlt /> Transaction
+        </Link>
+        <Link to="/category" className="dashboard-link">
+          <FaPlusCircle /> Category
+        </Link>
+        <Link to="/ask-ai" className="dashboard-link">
+          <FaQuestionCircle /> AskAI
+        </Link>
+        <Link to="/user-profile" className="dashboard-link">
+          <FaUser /> UserProfile
+        </Link>
+        <Link to="/dashboard" className="dashboard-link">
+          <FaTachometerAlt /> Dashboard
+        </Link>
+      </div>
+      <div className="finance-page-container">
+        <h3 className="finance-page-title">Finance Overview</h3>
+        <ul className="list">
+          {combinedEntries.map((item) => (
+            <li key={item.ID} className={item.Source ? "plus" : "minus"}>
+              {item.Name || item.Source}{" "}
+              <span>${Math.abs(item.Amount).toFixed(2)}</span>
+              <FaTrashAlt
                 className="delete-btn"
-                onClick={() => handleDeleteTransaction(transaction.ID)}
+                onClick={() =>
+                  item.Source
+                    ? handleDeleteIncome(item.ID)
+                    : handleDeleteTransaction(item.ID)
+                }
               >
                 x
-              </button>
+              </FaTrashAlt>
             </li>
           ))}
         </ul>
-
-        {error && <div className="transaction-error-message">{error}</div>}
-
-        <div className="transaction-add-form">
-          <h3 className="transaction-add-title">Add New Transaction</h3>
-          <form id="form" onSubmit={handleAddTransaction}>
-            <div className="form-control">
-              <label htmlFor="text">Text</label>
-              <input
-                type="text"
-                id="text"
-                name="Name"
-                placeholder="Enter text..."
-                value={newTransaction.Name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-control">
-              <label htmlFor="amount">
-                Amount <br />
-              </label>
-              <input
-                type="number"
-                id="amount"
-                name="Amount"
-                placeholder="Enter amount..."
-                value={newTransaction.Amount}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-control">
-              <label className="transaction-form-label">Category</label>
-              <select
-                name="CategoryName"
-                value={newTransaction.CategoryName}
-                onChange={handleInputChange}
-                className="transaction-form-select"
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category.ID} value={category.Name}>
-                    {category.Name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button className="btn" type="submit">
-              Add transaction
-            </button>
-          </form>
+        {error && <div className="finance-error-message">{error}</div>}
+        <div className="finance-forms">
+          <div className="transaction-form">
+            <h3>Add New Expense</h3>
+            <form onSubmit={handleAddTransaction}>
+              <div className="form-control">
+                <label>Name</label>
+                <input
+                  type="text"
+                  name="Name"
+                  placeholder="Enter name..."
+                  value={newTransaction.Name}
+                  onChange={(e) => handleInputChange(e, setNewTransaction)}
+                />
+              </div>
+              <div className="form-control">
+                <label>Amount</label>
+                <input
+                  type="number"
+                  name="Amount"
+                  placeholder="Enter amount..."
+                  value={newTransaction.Amount}
+                  onChange={(e) => handleInputChange(e, setNewTransaction)}
+                />
+              </div>
+              <div className="form-control">
+                <label>Category</label>
+                <select
+                  name="CategoryName"
+                  value={newTransaction.CategoryName}
+                  onChange={(e) => handleInputChange(e, setNewTransaction)}
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category.ID} value={category.Name}>
+                      {category.Name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="btn">
+                Add Expense
+              </button>
+            </form>
+          </div>
+          <div className="income-form">
+            <h3>Add New Income</h3>
+            <form onSubmit={handleAddIncome}>
+              <div className="form-control">
+                <label>Source</label>
+                <input
+                  type="text"
+                  name="Source"
+                  placeholder="Enter source..."
+                  value={newIncome.Source}
+                  onChange={(e) => handleInputChange(e, setNewIncome)}
+                />
+              </div>
+              <div className="form-control">
+                <label>Amount</label>
+                <input
+                  type="number"
+                  name="Amount"
+                  placeholder="Enter amount..."
+                  value={newIncome.Amount}
+                  onChange={(e) => handleInputChange(e, setNewIncome)}
+                />
+              </div>
+              <button type="submit" className="btn">
+                Add Income
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-      <div className="transaction-links">
-        <Link to="/category" className="transaction-link">
-          <FaPlusCircle /> Add more category
-        </Link>
-        <Link to="/ask-ai" className="transaction-link">
-          <FaQuestionCircle /> AskAI
-        </Link>
-        <Link to="/income" className="transaction-link">
-          <FaMoneyBillAlt /> Income
-        </Link>
-        <Link to="/dashboard" className="transaction-link">
-          <FaTachometerAlt /> Dashboard
-        </Link>
       </div>
     </div>
   );

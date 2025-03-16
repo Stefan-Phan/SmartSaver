@@ -22,7 +22,7 @@ exports.getTransactions = (req, res) => {
 
 exports.addTransaction = (req, res) => {
   const userID = req.userId;
-  const { Name, Amount, CategoryName, Date } = req.body;
+  const { Name, Amount, CategoryName } = req.body; // Remove Date from destructuring
 
   // Get CategoryID from CategoryName
   const getCategorySQL =
@@ -39,11 +39,11 @@ exports.addTransaction = (req, res) => {
 
     const CategoryID = categoryResult[0].ID;
 
-    // Insert the transaction with CategoryID
+    // Insert the transaction with CategoryID, remove Date parameter
     const sql =
-      "INSERT INTO Transaction (UserID, Name, Amount, CategoryID, Date) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO Transaction (UserID, Name, Amount, CategoryID) VALUES (?, ?, ?, ?)";
 
-    db.query(sql, [userID, Name, Amount, CategoryID, Date], (err, result) => {
+    db.query(sql, [userID, Name, Amount, CategoryID], (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({
         message: "Transaction added successfully!",
@@ -55,7 +55,7 @@ exports.addTransaction = (req, res) => {
 
 exports.updateTransaction = (req, res) => {
   const userID = req.userId;
-  const { Name, Amount, CategoryName, Date } = req.body;
+  const { Name, Amount, CategoryName } = req.body; // Remove Date from destructuring
   const transactionId = req.params.id;
 
   // Get CategoryID from CategoryName
@@ -73,13 +73,13 @@ exports.updateTransaction = (req, res) => {
 
     const CategoryID = categoryResult[0].ID;
 
-    // Update the transaction with CategoryID
+    // Update the transaction with CategoryID, remove Date field
     const sql =
-      "UPDATE Transaction SET UserID = ?, Name = ?, Amount = ?, CategoryID = ?, Date = ? WHERE ID = ?";
+      "UPDATE Transaction SET Name = ?, Amount = ?, CategoryID = ? WHERE ID = ? AND UserID = ?";
 
     db.query(
       sql,
-      [userID, Name, Amount, CategoryID, Date, transactionId],
+      [Name, Amount, CategoryID, transactionId, userID],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         if (result.affectedRows === 0)

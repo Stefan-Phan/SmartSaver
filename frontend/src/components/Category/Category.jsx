@@ -6,12 +6,14 @@ import {
   deleteCategory,
 } from "../../api/categoryApi";
 import { getTransactions } from "../../api/transactionApi";
-import "./Category.css"; // Import the CSS file
+import "./Category.css";
 import {
   FaTachometerAlt,
   FaPlusCircle,
   FaQuestionCircle,
   FaMoneyBillAlt,
+  FaListAlt,
+  FaUser,
 } from "react-icons/fa";
 
 function CategoryPage() {
@@ -125,107 +127,107 @@ function CategoryPage() {
   };
 
   return (
-    <div className="category-page-container">
-      <div className="category-page-content">
-        <div className="category-header">
-          <Link to="/dashboard" className="category-back-button">
-            Back to dashboard
-          </Link>
-          <h2 className="category-title">Categories</h2>
-          <Link to="/transaction" className="category-back-button">
-            Back to Transactions
-          </Link>
-        </div>
-
-        {error && <div className="category-error-message">{error}</div>}
-
-        <div className="category-add-form">
-          <h3 className="category-add-title">Add New Category</h3>
-          <form onSubmit={handleAddCategory} className="category-form">
-            <div className="form-control">
-              <label htmlFor="categoryName">Category Name</label>
-              <input
-                type="text"
-                name="Name"
-                placeholder="Enter category name"
-                value={newCategory.Name}
-                onChange={handleInputChange}
-                className="category-input"
-              />
-            </div>
-            <button type="submit" className="btn">
-              Add Category
-            </button>
-          </form>
-        </div>
-
-        {isLoading ? (
-          <div className="loading-container">Loading categories...</div>
-        ) : (
-          <div className="category-table-container">
-            <table className="category-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Usage Count</th>
-                  <th>Total Amount</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="no-categories">
-                      No categories found. Add your first category above.
-                    </td>
-                  </tr>
-                ) : (
-                  categories.map((category) => (
-                    <tr key={category.ID}>
-                      <td>{category.Name}</td>
-                      <td>
-                        {categoryUsage[category.ID]?.count || 0} transaction(s)
-                      </td>
-                      <td>
-                        $
-                        {categoryUsage[category.ID]?.total?.toFixed(2) ||
-                          "0.00"}
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => handleDeleteCategory(category.ID)}
-                          className="delete-category-button"
-                          disabled={categoryUsage[category.ID]?.count > 0}
-                          title={
-                            categoryUsage[category.ID]?.count > 0
-                              ? "Cannot delete category in use"
-                              : "Delete category"
-                          }
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      <div className="category-links">
-        <Link to="/category" className="category-link">
-          <FaPlusCircle /> Add more category
+    <div>
+      <div className="dashboard-links">
+        <Link to="/transaction" className="dashboard-link">
+          <FaListAlt /> Transaction
         </Link>
-        <Link to="/ask-ai" className="category-link">
+        <Link to="/category" className="dashboard-link">
+          <FaPlusCircle /> Category
+        </Link>
+        <Link to="/ask-ai" className="dashboard-link">
           <FaQuestionCircle /> AskAI
         </Link>
-        <Link to="/income" className="category-link">
-          <FaMoneyBillAlt /> Income
+        <Link to="/user-profile" className="dashboard-link">
+          <FaUser /> UserProfile
         </Link>
-        <Link to="/dashboard" className="category-link">
+        <Link to="/dashboard" className="dashboard-link">
           <FaTachometerAlt /> Dashboard
         </Link>
+      </div>
+      <div className="category-page-container">
+        <div className="category-page-content">
+          <div className="category-header">
+            <h2 className="category-title">Categories</h2>
+          </div>
+
+          {error && <div className="category-error-message">{error}</div>}
+
+          <div className="category-add-form">
+            <h3 className="category-add-title">Add New Category</h3>
+            <form onSubmit={handleAddCategory} className="category-form">
+              <div className="form-control">
+                <label htmlFor="categoryName">Category Name</label>
+                <input
+                  type="text"
+                  name="Name"
+                  placeholder="Enter category name"
+                  value={newCategory.Name}
+                  onChange={handleInputChange}
+                  className="category-input"
+                />
+              </div>
+              <button type="submit" className="btn">
+                Add Category
+              </button>
+            </form>
+          </div>
+
+          {isLoading ? (
+            <div className="loading-container">Loading categories...</div>
+          ) : (
+            <div className="category-table-container">
+              <table className="category-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Usage Count</th>
+                    <th>Total Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="no-categories">
+                        No categories found. Add your first category above.
+                      </td>
+                    </tr>
+                  ) : (
+                    categories.map((category) => (
+                      <tr key={category.ID}>
+                        <td>{category.Name}</td>
+                        <td>
+                          {categoryUsage[category.ID]?.count || 0}{" "}
+                          transaction(s)
+                        </td>
+                        <td>
+                          $
+                          {categoryUsage[category.ID]?.total?.toFixed(2) ||
+                            "0.00"}
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => handleDeleteCategory(category.ID)}
+                            className="delete-category-button"
+                            disabled={categoryUsage[category.ID]?.count > 0}
+                            title={
+                              categoryUsage[category.ID]?.count > 0
+                                ? "Cannot delete category in use"
+                                : "Delete category"
+                            }
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

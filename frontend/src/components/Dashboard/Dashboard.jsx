@@ -10,8 +10,8 @@ import {
   FaPlusCircle,
   FaUser,
   FaQuestionCircle,
-  FaMoneyBillAlt,
-} from "react-icons/fa"; // Import icons
+  FaTachometerAlt,
+} from "react-icons/fa";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -147,86 +147,73 @@ function DashboardPage() {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-content">
-        <h2 className="dashboard-title">Dashboard</h2>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <div className="balance-display">
-          <h4>Your Balance</h4>
-          <h1 id="balance">${totalBalance.toFixed(2)}</h1>
-        </div>
-
-        <div className="inc-exp-container">
-          <div>
-            <h4>Income</h4>
-            <p id="money-plus" className="money plus">
-              +${incomeTotal.toFixed(2)}
-            </p>
-          </div>
-          <div>
-            <h4>Expense</h4>
-            <p id="money-minus" className="money minus">
-              -${expenseTotal.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        {chartData && (
-          <div className="chart-container">
-            <Pie data={chartData} options={{ onClick: handleSliceClick }} />
-          </div>
-        )}
-
-        {selectedCategoryTransactions.length > 0 && (
-          <div className="category-transactions">
-            <h3 className="category-title">
-              Transactions for {selectedCategoryName}
-            </h3>
-            <div className="transactions-table-container">
-              <table className="transactions-table">
-                <thead>
-                  <tr className="table-header">
-                    <th className="table-header-cell">Name</th>
-                    <th className="table-header-cell">Amount</th>
-                    <th className="table-header-cell">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedCategoryTransactions.map((transaction) => (
-                    <tr key={transaction.ID} className="table-row">
-                      <td className="table-cell">{transaction.Name}</td>
-                      <td className="table-cell">
-                        ${parseFloat(transaction.Amount).toFixed(2)}
-                      </td>
-                      <td className="table-cell">
-                        {formatDate(transaction.Date)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+    <div>
       <div className="dashboard-links">
+        {" "}
         <Link to="/transaction" className="dashboard-link">
-          <FaListAlt /> Transaction Detail
+          <FaListAlt /> Transaction
         </Link>
         <Link to="/category" className="dashboard-link">
-          <FaPlusCircle /> Add more category
-        </Link>
-        <Link to="/user-profile" className="dashboard-link">
-          <FaUser /> UserProfile
+          <FaPlusCircle /> Category
         </Link>
         <Link to="/ask-ai" className="dashboard-link">
           <FaQuestionCircle /> AskAI
         </Link>
-        <Link to="/income" className="dashboard-link">
-          <FaMoneyBillAlt /> Income
+        <Link to="/user-profile" className="dashboard-link">
+          <FaUser /> UserProfile
         </Link>
+        <Link to="/dashboard" className="dashboard-link">
+          <FaTachometerAlt /> Dashboard
+        </Link>
+      </div>
+      <div className="dashboard-container">
+        <div className="dashboard-content">
+          <h2 className="dashboard-title">Dashboard</h2>
+          {error && <div className="error-message">{error}</div>}
+          <div className="balance-display">
+            <h4>Your Balance</h4>
+            <h1 id="balance">${totalBalance.toFixed(2)}</h1>
+          </div>
+          <div className="inc-exp-container">
+            <div>
+              <h4>Income</h4>
+              <p className="money plus">+${incomeTotal.toFixed(2)}</p>
+            </div>
+            <div>
+              <h4>Expense</h4>
+              <p className="money minus">-${expenseTotal.toFixed(2)}</p>
+            </div>
+          </div>
+          {chartData && (
+            <div className="chart-container">
+              <Pie data={chartData} options={{ onClick: handleSliceClick }} />
+            </div>
+          )}
+          {selectedCategoryTransactions.length > 0 && (
+            <div className="category-transactions">
+              <h3 className="category-title">
+                Transactions for {selectedCategoryName}
+              </h3>
+              <div className="transactions-table-container">
+                <table className="transactions-table">
+                  <tbody>
+                    {selectedCategoryTransactions.map((t) => (
+                      <tr
+                        key={t.ID}
+                        className={`table-row ${
+                          t.Amount < 0 ? "plus" : "minus"
+                        }`}
+                      >
+                        <td>{t.Name}</td>
+                        <td>${parseFloat(t.Amount).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

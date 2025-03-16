@@ -20,12 +20,12 @@ exports.getIncomeByUserID = (req, res) => {
 };
 
 exports.addIncome = (req, res) => {
-  const userID = req.userId; // Get userID from JWT
-  const { Source, Amount, Date, Notes } = req.body;
+  const userID = req.userId;
+  const { Source, Amount, Notes } = req.body;
   const sql =
-    "INSERT INTO Income (UserID, Source, Amount, Date, Notes) VALUES (?, ?, ?, ?, ?)";
+    "INSERT INTO Income (UserID, Source, Amount, Notes) VALUES (?, ?, ?, ?)";
 
-  db.query(sql, [userID, Source, Amount, Date, Notes], (err, result) => {
+  db.query(sql, [userID, Source, Amount, Notes], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({
       message: "Income record added successfully!",
@@ -36,22 +36,18 @@ exports.addIncome = (req, res) => {
 
 exports.updateIncome = (req, res) => {
   const userID = req.userId;
-  const { Source, Amount, Date, Notes } = req.body;
+  const { Source, Amount, Notes } = req.body; // Remove Date from destructuring
   const incomeID = req.params.id;
 
   const sql =
-    "UPDATE Income SET UserID = ?, Source = ?, Amount = ?, Date = ?, Notes = ? WHERE ID = ?";
+    "UPDATE Income SET Source = ?, Amount = ?, Notes = ? WHERE ID = ? AND UserID = ?";
 
-  db.query(
-    sql,
-    [userID, Source, Amount, Date, Notes, incomeID],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Income record not found" });
-      res.json({ message: "Income record updated successfully!" });
-    }
-  );
+  db.query(sql, [Source, Amount, Notes, incomeID, userID], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "Income record not found" });
+    res.json({ message: "Income record updated successfully!" });
+  });
 };
 
 exports.deleteIncome = (req, res) => {

@@ -4,7 +4,14 @@ import { updateWeeklyLimit } from "../../api/userApi";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./UserProfile.css"; // Import the CSS file
-import { FaTachometerAlt } from "react-icons/fa";
+import {
+  FaListAlt,
+  FaPlusCircle,
+  FaUser,
+  FaQuestionCircle,
+  FaMoneyBillAlt,
+  FaTachometerAlt,
+} from "react-icons/fa";
 
 function UserProfile() {
   const [user, setUser] = useState(null);
@@ -78,46 +85,57 @@ function UserProfile() {
   }
 
   return (
-    <div className="user-profile-container">
-      <div className="user-profile-content">
-        <h3 className="user-profile-title">User Profile</h3>
-        <Link to="/dashboard" className="user-profile-dashboard-link">
+    <div>
+      <div className="dashboard-links">
+        <Link to="/transaction" className="dashboard-link">
+          <FaListAlt /> Transaction
+        </Link>
+        <Link to="/category" className="dashboard-link">
+          <FaPlusCircle /> Category
+        </Link>
+        <Link to="/ask-ai" className="dashboard-link">
+          <FaQuestionCircle /> AskAI
+        </Link>
+        <Link to="/user-profile" className="dashboard-link">
+          <FaUser /> UserProfile
+        </Link>
+        <Link to="/dashboard" className="dashboard-link">
           <FaTachometerAlt /> Dashboard
         </Link>
-        {error && <div className="user-profile-error-message">{error}</div>}
-
-        {successMessage && (
-          <div className="user-profile-success-message">{successMessage}</div>
-        )}
-
-        <div className="user-profile-info">
-          <div className="info-item">
-            <label className="info-label">Name:</label>
-            <p className="info-value">{user.Name}</p>
+      </div>
+      <div className="user-profile-container">
+        <div className="user-profile-content">
+          <h3 className="user-profile-title">User Profile</h3>
+          {error && <div className="user-profile-error-message">{error}</div>}
+          {successMessage && (
+            <div className="user-profile-success-message">{successMessage}</div>
+          )}
+          <div className="user-profile-info">
+            <div className="info-item">
+              <label className="info-label">Name:</label>
+              <p className="info-value">{user.Name}</p>
+            </div>
+            <div className="info-item">
+              <label className="info-label">Email:</label>
+              <p className="info-value">{user.Email}</p>
+            </div>
+            <div className="info-item">
+              <label className="info-label">Weekly Limit:</label>
+              <input
+                type="number"
+                value={weeklyLimit}
+                onChange={handleWeeklyLimitChange}
+                className="info-input"
+              />
+            </div>
           </div>
-
-          <div className="info-item">
-            <label className="info-label">Email:</label>
-            <p className="info-value">{user.Email}</p>
-          </div>
-
-          <div className="info-item">
-            <label className="info-label">Weekly Limit:</label>
-            <input
-              type="number"
-              value={weeklyLimit}
-              onChange={handleWeeklyLimitChange}
-              className="info-input"
-            />
-          </div>
+          <button
+            onClick={handleUpdateWeeklyLimit}
+            className="user-profile-update-button"
+          >
+            Update Weekly Limit
+          </button>
         </div>
-
-        <button
-          onClick={handleUpdateWeeklyLimit}
-          className="user-profile-update-button"
-        >
-          Update Weekly Limit
-        </button>
       </div>
     </div>
   );

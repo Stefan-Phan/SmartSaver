@@ -5,7 +5,6 @@ import CategoryPage from "./components/Category/Category";
 import DashboardPage from "./components/Dashboard/Dashboard";
 import UserProfile from "./components/UserProfile/UserProfile";
 import AskAI from "./components/AskAI/AskAI";
-import IncomePage from "./components/Income/Income";
 
 function App() {
   return (
@@ -22,7 +21,6 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />}></Route>
           <Route path="/user-profile" element={<UserProfile />}></Route>
           <Route path="/ask-ai" element={<AskAI />}></Route>
-          <Route path="/income" element={<IncomePage />}></Route>
         </Routes>
       </BrowserRouter>
     </div>
