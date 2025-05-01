@@ -2,10 +2,10 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const db = require("./src/config/db");
-const serverless = require("serverless-http");
-const router = express.Router();
 
 const app = express();
+const port = process.env.PORT || 5001;
+
 app.use(cors());
 app.use(express.json());
 
@@ -24,6 +24,7 @@ app.use(
 );
 app.use("/smartsaver-api/v1/incomes", require("./src/routes/incomeRoutes"));
 
-// Nolify serverless handler setup
-app.use("/.nolify/functions/api", router);
-module.exports.handler = serverless(app);
+// Start the server
+app.listen(port, () => {
+  console.log(`Server listening on http://localhost:${port}`);
+});
