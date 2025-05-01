@@ -25,7 +25,7 @@ exports.addTransaction = (req, res) => {
   const { Name, Amount, CategoryName } = req.body;
 
   if (CategoryName && CategoryName.toLowerCase() === "income") {
-    const { Source = Name, Notes = "" } = req.body; // Map Name to Source for income
+    const { Source = Name, Notes = "" } = req.body;
     const sql =
       "INSERT INTO Income (UserID, Source, Amount, Notes) VALUES (?, ?, ?, ?)";
 
