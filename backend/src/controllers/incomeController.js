@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 exports.getIncomeByUserID = (req, res) => {
-  const userID = req.userId; // Get userID from JWT
+  const userID = req.userId;
   const sql = "SELECT * FROM Income WHERE UserID = ?";
 
   db.query(sql, [userID], (err, result) => {
@@ -36,7 +36,7 @@ exports.addIncome = (req, res) => {
 
 exports.updateIncome = (req, res) => {
   const userID = req.userId;
-  const { Source, Amount, Notes } = req.body; // Remove Date from destructuring
+  const { Source, Amount, Notes } = req.body;
   const incomeID = req.params.id;
 
   const sql =

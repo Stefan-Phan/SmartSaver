@@ -3,14 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
-import Link from "next/link";
-import {
-  FaListAlt,
-  FaPlusCircle,
-  FaUser,
-  FaQuestionCircle,
-  FaTachometerAlt,
-} from "react-icons/fa";
 import { getCategories, getIncomes, getTransactions } from "@/lib/api/getInfo";
 
 Chart.register(ArcElement, Tooltip, Legend);

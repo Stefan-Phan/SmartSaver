@@ -22,40 +22,52 @@ exports.getTransactions = (req, res) => {
 
 exports.addTransaction = (req, res) => {
   const userID = req.userId;
-  const { Name, Amount, CategoryName } = req.body; // Remove Date from destructuring
+  const { Name, Amount, CategoryName } = req.body;
 
-  // Get CategoryID from CategoryName
-  const getCategorySQL =
-    "SELECT ID FROM Category WHERE UserID = ? AND Name = ?";
-
-  db.query(getCategorySQL, [userID, CategoryName], (err, categoryResult) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (categoryResult.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Category not found for this user" });
-    }
-
-    const CategoryID = categoryResult[0].ID;
-
-    // Insert the transaction with CategoryID, remove Date parameter
+  if (CategoryName && CategoryName.toLowerCase() === "income") {
+    const { Source = Name, Notes = "" } = req.body; // Map Name to Source for income
     const sql =
-      "INSERT INTO Transaction (UserID, Name, Amount, CategoryID) VALUES (?, ?, ?, ?)";
+      "INSERT INTO Income (UserID, Source, Amount, Notes) VALUES (?, ?, ?, ?)";
 
-    db.query(sql, [userID, Name, Amount, CategoryID], (err, result) => {
+    db.query(sql, [userID, Source, Math.abs(Amount), Notes], (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({
-        message: "Transaction added successfully!",
-        transactionID: result.insertId,
+      return res.json({
+        message: "Income record added successfully!",
+        incomeID: result.insertId,
       });
     });
-  });
+  } else {
+    // Get CategoryID from CategoryName for expenses
+    const getCategorySQL =
+      "SELECT ID FROM Category WHERE UserID = ? AND Name = ?";
+
+    db.query(getCategorySQL, [userID, CategoryName], (err, categoryResult) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (categoryResult.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "Category not found for this user" });
+      }
+
+      const CategoryID = categoryResult[0].ID;
+      const sql =
+        "INSERT INTO Transaction (UserID, Name, Amount, CategoryID) VALUES (?, ?, ?, ?)";
+
+      db.query(sql, [userID, Name, Amount, CategoryID], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({
+          message: "Transaction added successfully!",
+          transactionID: result.insertId,
+        });
+      });
+    });
+  }
 };
 
 exports.updateTransaction = (req, res) => {
   const userID = req.userId;
-  const { Name, Amount, CategoryName } = req.body; // Remove Date from destructuring
+  const { Name, Amount, CategoryName } = req.body;
   const transactionId = req.params.id;
 
   // Get CategoryID from CategoryName
