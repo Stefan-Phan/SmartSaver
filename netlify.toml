@@ -1,8 +1,0 @@
-[build]
-  functions = "nolify/functions"
-  publish = "build"
-
-[[redirects]]
-  from = "/smartsaver-api/*"
-  to = "/.nolify/functions/api/:splat"
-  status = 200
