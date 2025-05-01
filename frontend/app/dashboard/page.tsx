@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { Pie } from "react-chartjs-2";
 import { getCategories, getIncomes, getTransactions } from "@/lib/api/getInfo";
+import BenefitCards from "../components/dashboard/BenefitCards";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
@@ -178,6 +179,8 @@ const DashboardPage: React.FC = () => {
               {error}
             </div>
           )}
+
+          <BenefitCards />
           <div className="bg-white shadow-sm rounded-md p-4 mb-4">
             <h4 className="text-lg font-semibold mb-2">Your Balance</h4>
             <h1
