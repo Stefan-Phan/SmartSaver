@@ -63,9 +63,9 @@ export default function TransactionItem({
       <td className="px-6 py-4 text-sm font-semibold">
         <button
           onClick={() => handleDeleteTransaction(t.ID)}
-          className="text-red-600 hover:text-red-900 cursor-pointer"
+          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none cursor-pointer"
         >
-          <Trash2 size={16} />
+          Delete
         </button>
       </td>
     </tr>
