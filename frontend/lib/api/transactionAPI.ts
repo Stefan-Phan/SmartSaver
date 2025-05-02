@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Transaction } from "@/types/Transaction";
-import { Category } from "@/types/Category"; // Assuming you have a Category type
+import { Category } from "@/types/Category";
+import { WeeklyReport } from "@/types/WeeklyReport";
 
 const API_URL = "http://localhost:5001/smartsaver-api/v1/transaction";
 const CATEGORIES_API_URL = "http://localhost:5001/smartsaver-api/v1/categories";
@@ -76,6 +77,69 @@ export const deleteTransaction = async (
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || "Failed to delete transaction"
+    );
+  }
+};
+
+export const getTotalIncome = async (token: string): Promise<number> => {
+  try {
+    const response = await axios.get(`${API_URL}/total-income`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch total income"
+    );
+  }
+};
+
+export const getTotalExpenses = async (token: string): Promise<number> => {
+  try {
+    const response = await axios.get(`${API_URL}/total-expense`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch total expenses"
+    );
+  }
+};
+
+export const getBalance = async (token: string): Promise<number> => {
+  try {
+    const response = await axios.get(`${API_URL}/balance`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to fetch balance");
+  }
+};
+
+export const getWeeklyReport = async (
+  token: string
+): Promise<WeeklyReport[]> => {
+  try {
+    const response = await axios.get<WeeklyReport[]>(
+      `${API_URL}/weekly-report`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch weekly report"
     );
   }
 };

@@ -15,7 +15,7 @@ export default function RegisterPage() {
     e.preventDefault();
     try {
       await registerUser(name, email, password);
-      router.push("/dashboard");
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     }

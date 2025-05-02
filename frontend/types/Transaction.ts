@@ -1,7 +1,10 @@
 export interface Transaction {
   ID: number;
-  CategoryID: number;
+  UserID?: number;
+  CategoryID?: number;
   Name: string;
   Amount: string;
-  Date: string;
+  Type: "income" | "expense";
+  CreatedAt?: string;
+  CategoryName?: string;
 }

@@ -15,7 +15,11 @@ export const registerUser = async (
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Registration failed");
+    const message = error.response?.data?.error || "Registration failed";
+    if (message.includes("already in use")) {
+      throw new Error("This email is already in use");
+    }
+    throw new Error(message);
   }
 };
 
@@ -30,6 +34,17 @@ export const loginUser = async (
     });
     return response.data.token;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Login failed");
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      "Login failed";
+
+    if (message.includes("coundn't find an account")) {
+      throw new Error("We couldn't find an account with that email");
+    } else if (message.includes("Incorrect password")) {
+      throw new Error("Incorrect password. Please try again");
+    }
+
+    throw new Error(message);
   }
 };
