@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { loginUser } from "@/lib/api/authApi";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,7 +13,7 @@ export default function LoginPage() {
     try {
       const token = await loginUser(email, password);
       localStorage.setItem("token", token);
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err.message);
     }

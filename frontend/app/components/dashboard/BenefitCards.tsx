@@ -8,7 +8,7 @@ const BenefitCards: React.FC = () => {
     {
       title: "Easy Tracking",
       icon: <FaCreditCard className="w-13 h-13 text-green-500" />,
-      description: "Monitor income and expenses simply and efficiently.",
+      description: "Monitor income and expenses efficiently.",
       color: "bg-green-100",
     },
     {
@@ -36,7 +36,7 @@ const BenefitCards: React.FC = () => {
       {options.map((option, index) => (
         <div
           key={index}
-          className={`flex flex-col py-7 px-5 justify-center rounded-lg shadow-md transition-transform transform hover:scale-105 ${option.color}`}
+          className={`flex flex-col py-12 px-5 justify-center rounded-lg shadow-md transition-transform transform hover:scale-105 ${option.color}`}
         >
           <div className="mb-2">{option.icon}</div>
           <p className="text-xl font-medium text-gray-700 mb-2">

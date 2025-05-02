@@ -12,9 +12,11 @@ import BenefitCards from "../components/dashboard/BenefitCards";
 import { Transaction } from "@/types/Transaction";
 import { Category } from "@/types/Category";
 import { Income } from "@/types/Income";
-import TransactionItem from "../components/dashboard/TransactionItem";
+import Sidebar from "../components/transaction/Sidebar";
+import { useRouter } from "next/navigation";
 
 const DashboardPage: React.FC = () => {
+  const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
@@ -28,6 +30,8 @@ const DashboardPage: React.FC = () => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
+    } else {
+      router.push("/");
     }
   }, []);
 
@@ -115,28 +119,7 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <div
-        className="flex flex-col bg-gray-50 p-10 w-1/4 justify-center items-center text-center"
-        style={{
-          borderTopLeftRadius: "4rem",
-          borderBottomLeftRadius: "4rem",
-        }}
-      >
-        <h3 className=" text-xl font-semibold mb-4">Recent Transactions</h3>
-        {transactions.length > 0 ? (
-          <div className="w-full">
-            {transactions.map((transaction) => (
-              <TransactionItem
-                key={transaction.ID}
-                transaction={transaction}
-                categoryName={getCategoryName(transaction.CategoryID)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-600">No recent transactions.</p>
-        )}
-      </div>
+      <Sidebar transactions={transactions} categories={categories} />
     </div>
   );
 };
