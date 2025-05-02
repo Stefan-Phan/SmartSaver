@@ -68,7 +68,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-50/75 bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-gray-100/75 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative">
         <button
           onClick={onClose}
@@ -77,8 +77,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           <X size={24} />
         </button>
 
-        <h3 className="text-xl font-medium mb-6 text-blue-800">
-          Add New Transaction
+        <h3 className="text-xl font-medium mb-6 text-indigo-600">
+          Add a new tsransaction
         </h3>
 
         <form onSubmit={handleSubmit}>
@@ -182,7 +182,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 (newTransaction.Type === "expense" &&
                   !newTransaction.CategoryName)
               }
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-colors"
             >
               Add Transaction
             </button>

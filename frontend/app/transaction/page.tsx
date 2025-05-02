@@ -7,6 +7,7 @@ import {
   getTransactions,
   addTransaction,
   deleteTransaction,
+  updateTransaction,
   getCategories,
 } from "../../lib/api/transactionAPI";
 
@@ -15,11 +16,12 @@ import { Transaction } from "@/types/Transaction";
 import { Category } from "@/types/Category";
 
 // import icons
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // import components
 import AddTransactionModal from "../components/transaction/AddTransactionModal";
 import Pagination from "../components/transaction/Pagination";
+import TransactionItem from "../components/transaction/TransactionItem";
 
 function TransactionPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -31,6 +33,11 @@ function TransactionPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactionsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Edit transactions
+  const [transactionToEdit, setTransactionToEdit] =
+    useState<Transaction | null>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -71,12 +78,6 @@ function TransactionPage() {
     }
   };
 
-  const getCategoryName = (categoryId?: number) => {
-    if (!categoryId) return "Uncategorized";
-    const category = categories.find((cat) => cat.ID === categoryId);
-    return category ? category.Name : "Unknown";
-  };
-
   const handleDeleteTransaction = async (id: number) => {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
 
@@ -104,24 +105,6 @@ function TransactionPage() {
     const indexOfFirstTransaction =
       indexOfLastTransaction - transactionsPerPage;
     return transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
-  };
-
-  // Format amount for display
-  const formatAmount = (amount: string) => {
-    return new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(parseFloat(amount));
-  };
-
-  const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   return (
@@ -155,83 +138,45 @@ function TransactionPage() {
               No transactions found
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {getCurrentTransactions().map((transaction) => (
-                  <tr
-                    key={transaction.ID}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {transaction.Name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          transaction.Type.toLocaleLowerCase() === "income"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {transaction.Type.toLocaleLowerCase() === "income"
-                          ? "Income"
-                          : "Expense"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {transaction.Type.toLocaleLowerCase() === "income"
-                        ? "Income"
-                        : getCategoryName(transaction.CategoryID)}
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap font-medium ${
-                        transaction.Type.toLocaleLowerCase() === "income"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {transaction.Type.toLocaleLowerCase() === "income"
-                        ? "+"
-                        : "-"}
-                      ${formatAmount(transaction.Amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(transaction.CreatedAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <button
-                        onClick={() => handleDeleteTransaction(transaction.ID)}
-                        className="text-red-600 hover:text-red-900 flex items-center justify-center mx-auto"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
+            <div className="overflow-hidden rounded-t-2xl shadow-lg bg-white">
+              <table className="min-w-full text-sm text-left text-gray-600">
+                <thead className="bg-white border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Name
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Type
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Category
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {getCurrentTransactions().map((t, i) => (
+                    <TransactionItem
+                      key={t.ID}
+                      t={t}
+                      handleDeleteTransaction={handleDeleteTransaction}
+                      openUpdateModal={(transaction) => {
+                        setTransactionToEdit(transaction);
+                        setIsUpdateModalOpen(true);
+                      }}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
