@@ -1,5 +1,5 @@
 import { Transaction } from "@/types/Transaction";
-import TransactionItem from "../dashboard/TransactionItem";
+import TransactionItem from "./TransactionItem";
 import { Category } from "@/types/Category";
 
 interface SidebarProps {

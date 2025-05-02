@@ -22,7 +22,6 @@ app.use(
   "/smartsaver-api/v1/categories",
   require("./src/routes/categoryRoutes")
 );
-app.use("/smartsaver-api/v1/incomes", require("./src/routes/incomeRoutes"));
 
 // Start the server
 app.listen(port, () => {

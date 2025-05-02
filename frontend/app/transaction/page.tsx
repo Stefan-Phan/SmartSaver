@@ -1,37 +1,36 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
+// import from api
 import {
   getTransactions,
   addTransaction,
-  updateTransaction,
   deleteTransaction,
   getCategories,
 } from "../../lib/api/transactionAPI";
 
+// import types
 import { Transaction } from "@/types/Transaction";
 import { Category } from "@/types/Category";
 
-interface NewTransaction {
-  Name: string;
-  Amount: string;
-  CategoryName: string;
-  Type: "income" | "expense";
-  CreatedAt?: string;
-}
+// import icons
+import { Plus, Trash2 } from "lucide-react";
+
+// import components
+import AddTransactionModal from "../components/transaction/AddTransactionModal";
+import Pagination from "../components/transaction/Pagination";
 
 function TransactionPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [newTransaction, setNewTransaction] = useState<NewTransaction>({
-    Name: "",
-    Amount: "",
-    CategoryName: "",
-    Type: "expense",
-  });
   const [token, setToken] = useState<string>("");
-  const [error, setError] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [transactionDate, setTransactionDate] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [transactionsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -47,13 +46,18 @@ function TransactionPage() {
     }
   }, [token]);
 
+  useEffect(() => {
+    // Calculate total pages whenever transactions change
+    setTotalPages(Math.ceil(transactions.length / transactionsPerPage));
+    // Reset to first page when transactions change
+    setCurrentPage(1);
+  }, [transactions, transactionsPerPage]);
+
   const fetchTransactions = async () => {
     try {
       const data = await getTransactions(token);
       setTransactions(data);
-      setError("");
-    } catch (error: any) {
-      setError(error.message || "Failed to fetch transactions");
+    } catch (error) {
       console.log(error);
     }
   };
@@ -62,9 +66,7 @@ function TransactionPage() {
     try {
       const data = await getCategories(token);
       setCategories(data);
-      setError("");
-    } catch (error: any) {
-      setError(error.message || "Failed to fetch categories");
+    } catch (error) {
       console.log(error);
     }
   };
@@ -75,157 +77,81 @@ function TransactionPage() {
     return category ? category.Name : "Unknown";
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setNewTransaction({ ...newTransaction, [e.target.name]: e.target.value });
-  };
-
-  const handleAddTransaction = async () => {
-    try {
-      // Prepare transaction data with date if provided
-      const transactionData = {
-        ...newTransaction,
-        CreatedAt: transactionDate || undefined,
-      };
-
-      await addTransaction(token, transactionData);
-      fetchTransactions();
-      setNewTransaction({
-        Name: "",
-        Amount: "",
-        CategoryName: "",
-        Type: "expense",
-      });
-      setTransactionDate("");
-      setError("");
-    } catch (error: any) {
-      setError(error.message || "Failed to add transaction");
-      console.log(error);
-    }
-  };
-
   const handleDeleteTransaction = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this transaction?")) return;
+
     try {
       await deleteTransaction(token, id);
       fetchTransactions();
-      setError("");
-    } catch (error: any) {
-      setError(error.message || "Failed to delete transaction");
+    } catch (error) {
       console.log(error);
     }
   };
 
+  const handleAddTransaction = async (transactionData: any) => {
+    try {
+      await addTransaction(token, transactionData);
+      fetchTransactions();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // Get current transactions for pagination
+  const getCurrentTransactions = () => {
+    const indexOfLastTransaction = currentPage * transactionsPerPage;
+    const indexOfFirstTransaction =
+      indexOfLastTransaction - transactionsPerPage;
+    return transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
+  };
+
+  // Format amount for display
+  const formatAmount = (amount: string) => {
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(parseFloat(amount));
+  };
+
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <h2 className="text-2xl font-bold text-center mb-6">Transactions</h2>
+    <div className="container mx-auto py-8 max-w-7xl">
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddTransaction}
+        categories={categories}
+      />
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-gray-50 p-4 rounded-lg mb-6">
-        <h3 className="text-lg font-medium mb-3">Add New Transaction</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              name="Name"
-              placeholder="Transaction name"
-              value={newTransaction.Name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount
-            </label>
-            <input
-              type="number"
-              name="Amount"
-              placeholder="0.00"
-              value={newTransaction.Amount}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type
-            </label>
-            <select
-              name="Type"
-              value={newTransaction.Type}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="income">Income</option>
-              <option value="expense">Expense</option>
-            </select>
-          </div>
-
-          {newTransaction.Type === "expense" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                name="CategoryName"
-                value={newTransaction.CategoryName}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category.ID} value={category.Name}>
-                    {category.Name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date (Optional)
-            </label>
-            <input
-              type="date"
-              value={transactionDate}
-              onChange={(e) => setTransactionDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-        <div className="mt-4 text-center">
+      {/* Transaction List */}
+      <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-3xl font-bold text-center text-indigo-600">
+            TRANSACTIONS
+          </h1>
           <button
-            onClick={handleAddTransaction}
-            disabled={
-              !newTransaction.Name ||
-              !newTransaction.Amount ||
-              (newTransaction.Type === "expense" &&
-                !newTransaction.CategoryName)
-            }
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500  transition-colors cursor-pointer"
           >
+            <Plus size={18} className="mr-2" />
             Add Transaction
           </button>
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-medium mb-4">Transaction History</h3>
         <div className="overflow-x-auto">
           {transactions.length === 0 ? (
-            <div className="px-6 py-4 text-center text-gray-500">
+            <div className="py-10 text-center text-gray-500">
               No transactions found
             </div>
           ) : (
@@ -253,8 +179,11 @@ function TransactionPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={transaction.ID}>
+                {getCurrentTransactions().map((transaction) => (
+                  <tr
+                    key={transaction.ID}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       {transaction.Name}
                     </td>
@@ -278,25 +207,25 @@ function TransactionPage() {
                     </td>
                     <td
                       className={`px-6 py-4 whitespace-nowrap font-medium ${
-                        transaction.Type === "income"
+                        transaction.Type.toLocaleLowerCase() === "income"
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
                     >
-                      {transaction.Type === "income" ? "+" : "-"}$
-                      {parseFloat(transaction.Amount)}
+                      {transaction.Type.toLocaleLowerCase() === "income"
+                        ? "+"
+                        : "-"}
+                      ${formatAmount(transaction.Amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {transaction.CreatedAt
-                        ? new Date(transaction.CreatedAt).toLocaleDateString()
-                        : "N/A"}
+                      {formatDate(transaction.CreatedAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => handleDeleteTransaction(transaction.ID)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 flex items-center justify-center mx-auto"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>
@@ -305,6 +234,17 @@ function TransactionPage() {
             </table>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {transactions.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={transactions.length}
+            itemsPerPage={transactionsPerPage}
+          />
+        )}
       </div>
     </div>
   );

@@ -41,7 +41,7 @@ import BenefitCards from "../components/dashboard/BenefitCards";
 // import types
 import { Transaction } from "@/types/Transaction";
 import { Category } from "@/types/Category";
-import Sidebar from "../components/transaction/Sidebar";
+import Sidebar from "../components/dashboard/Sidebar";
 import { useRouter } from "next/navigation";
 
 interface WeeklyReport {
