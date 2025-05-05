@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 // Icons
-import { Plus, Edit } from "lucide-react"; // Import the Edit icon
+import { Plus } from "lucide-react";
 
 // Types
 import { Category } from "@/types/Category";
@@ -11,20 +11,19 @@ import { Transaction } from "@/types/Transaction";
 
 // Components
 import AddCategoryModal from "../components/category/AddCategoryModal";
-import EditCategoryModal from "../components/category/EditCategoryModal"; // Import the new modal
-import Pagination from "../components/transaction/Pagination";
-import CategoryRow from "../components/category/CategoryRow";
+import EditCategoryModal from "../components/category/EditCategoryModal";
 
 // API Functions
 import {
   getCategories as fetchCategoriesApi,
   addCategory as addCategoryApi,
   deleteCategory as deleteCategoryApi,
-  updateCategory as updateCategoryApi, // Import the update API function
+  updateCategory as updateCategoryApi,
   getTotalWeeklyLimit,
 } from "@/lib/api/categoryAPI";
 import { getTransactions as fetchTransactionsApi } from "@/lib/api/transactionAPI";
 import CategoryLimitChart from "../components/category/CategoryLimitChart";
+import CategoryList from "../components/category/CategoryList";
 
 export default function CategoryPage() {
   // State
@@ -40,13 +39,8 @@ export default function CategoryPage() {
   const [totalWeeklyLimit, setTotalWeeklyLimit] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null); // State for the category being edited
-
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [categoriesPerPage] = useState(5);
-  const [totalPages, setTotalPages] = useState(1);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   // Initial token load
   useEffect(() => {
@@ -70,12 +64,6 @@ export default function CategoryPage() {
     }
     setIsLoading(false);
   }, [transactions, categories]);
-
-  // Update pagination when categories change
-  useEffect(() => {
-    setTotalPages(Math.ceil(categories.length / categoriesPerPage));
-    setCurrentPage(1);
-  }, [categories, categoriesPerPage]);
 
   // API Calls
   const fetchCategories = async () => {
@@ -185,19 +173,8 @@ export default function CategoryPage() {
     }
   };
 
-  // Get current categories for pagination
-  const getCurrentCategories = () => {
-    const indexOfLastCategory = currentPage * categoriesPerPage;
-    const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
-    return categories.slice(indexOfFirstCategory, indexOfLastCategory);
-  };
-
   return (
     <div className="container mx-auto py-8 max-w-7xl">
-      <div className="mb-4 text-right text-indigo-700 font-semibold">
-        Total Weekly Limit: ${totalWeeklyLimit}
-      </div>
-
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={isAddModalOpen}
@@ -244,60 +221,13 @@ export default function CategoryPage() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="text-center py-10">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading categories...</p>
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="py-10 text-center text-gray-500">
-              No categories found
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-t-2xl shadow-lg bg-white">
-              <table className="min-w-full text-sm text-left text-gray-600">
-                <thead className="bg-white border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
-                      Category
-                    </th>
-                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
-                      Weekly Limit
-                    </th>
-                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
-                      Total Amount
-                    </th>
-                    <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {getCurrentCategories().map((category) => (
-                    <CategoryRow
-                      key={category.ID}
-                      category={category}
-                      usage={
-                        categoryUsage[category.ID] || { count: 0, total: 0 }
-                      }
-                      onDelete={handleDeleteCategory}
-                      onEdit={handleOpenEditModal}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination Controls */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          totalItems={categories.length}
-          itemsPerPage={categoriesPerPage}
+        <CategoryList
+          categories={categories}
+          categoryUsage={categoryUsage}
+          isLoading={isLoading}
+          error={error}
+          onDelete={handleDeleteCategory}
+          onEdit={handleOpenEditModal}
         />
       </div>
     </div>

@@ -19,6 +19,22 @@ const CategoryLimitChart: React.FC<CategoryLimitChartProps> = ({
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
+  // Function to generate a vibrant color
+  const generateColor = (index: number, total: number) => {
+    // Use HSL for better color variation and control
+    const hue = Math.round((index / total) * 360);
+    const saturation = "70%";
+    const lightness = "60%";
+    return `hsl(${hue}, ${saturation}, ${lightness}, 0.7)`;
+  };
+
+  const generateBorderColor = (index: number, total: number) => {
+    const hue = Math.round((index / total) * 360);
+    const saturation = "80%";
+    const lightness = "40%";
+    return `hsl(${hue}, ${saturation}, ${lightness}, 1)`;
+  };
+
   useEffect(() => {
     if (
       chartRef.current &&
@@ -31,6 +47,17 @@ const CategoryLimitChart: React.FC<CategoryLimitChartProps> = ({
 
       const categoryLabels = categories.map((cat) => cat.Name);
       const categoryLimits = categories.map((cat) => cat.WeeklyLimit);
+      const allLimits = [...categoryLimits, totalWeeklyLimit];
+
+      const backgroundColors = categories.map((_, index) =>
+        generateColor(index, categories.length)
+      );
+      backgroundColors.push("rgba(153, 102, 255, 0.7)");
+
+      const borderColors = categories.map((_, index) =>
+        generateBorderColor(index, categories.length)
+      );
+      borderColors.push("rgba(153, 102, 255, 1)");
 
       const newChartInstance = new Chart(chartRef.current, {
         type: "bar",
@@ -39,17 +66,9 @@ const CategoryLimitChart: React.FC<CategoryLimitChartProps> = ({
           datasets: [
             {
               label: "Weekly Limit",
-              data: [...categoryLimits, totalWeeklyLimit],
-              backgroundColor: [
-                ...categories.map(
-                  (_, index) => `rgba(75, 192, 192, 0.${(index + 3) * 10})`
-                ), // Varying shades of teal
-                "rgba(153, 102, 255, 0.7)", // Highlight total
-              ],
-              borderColor: [
-                ...categories.map((_, index) => `rgba(75, 192, 192, 1)`),
-                "rgba(153, 102, 255, 1)",
-              ],
+              data: allLimits,
+              backgroundColor: backgroundColors,
+              borderColor: borderColors,
               borderWidth: 1,
             },
           ],
@@ -89,15 +108,15 @@ const CategoryLimitChart: React.FC<CategoryLimitChartProps> = ({
           },
           plugins: {
             legend: {
-              display: false, // Hide the legend as there's only one dataset
+              display: false,
             },
             title: {
               display: true,
               text: "Category Weekly Limits vs. Total Weekly Limit",
               font: {
-                size: 16,
+                size: 30,
               },
-              color: "#333",
+              color: "#4f39f6",
               padding: {
                 bottom: 10,
               },
@@ -134,7 +153,7 @@ const CategoryLimitChart: React.FC<CategoryLimitChartProps> = ({
 
   return (
     <div className="mb-6 bg-white rounded-lg shadow-md p-4 border border-gray-100">
-      <canvas ref={chartRef} style={{ maxHeight: "300px" }} />
+      <canvas ref={chartRef} style={{ minHeight: "400px" }} />
     </div>
   );
 };
