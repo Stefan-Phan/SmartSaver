@@ -1,90 +1,87 @@
 const { getAIRecommendation } = require("../utils/aiPromptGenerator");
 const db = require("../config/db");
 
+// --- Reusable Data Fetching Functions (Weekly) ---
+
+async function fetchTotalWeeklyLimit(userId) {
+  return new Promise((resolve, reject) => {
+    db.query(
+      "SELECT SUM(WeeklyLimit) AS TotalWeeklyLimit FROM Category WHERE UserID = ?",
+      [userId],
+      (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results[0]?.TotalWeeklyLimit || 0);
+        }
+      }
+    );
+  });
+}
+
+async function fetchTotalExpenseWeekly(userId) {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT SUM(t.Amount) AS totalExpenseWeekly
+      FROM Transaction t
+      WHERE t.UserID = ?
+        AND t.Type = 'expense'
+        AND WEEK(t.CreatedAt, 1) = WEEK(CURDATE(), 1)
+        AND YEAR(t.CreatedAt) = YEAR(CURDATE())
+    `;
+    db.query(sql, [userId], (err, expenseResult) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(expenseResult[0]?.totalExpenseWeekly || 0);
+      }
+    });
+  });
+}
+
+// --- Controller Logic ---
+
 exports.getRecommendation = async (req, res) => {
   try {
     const userId = req.userId;
     const { question, mode } = req.body;
 
-    // Fetch user's weekly limit
-    db.query(
-      "SELECT WeeklyLimit FROM User WHERE ID = ?",
-      [userId],
-      (err, user) => {
-        if (err) {
-          console.error("Error fetching user data:", err);
-          return res
-            .status(500)
-            .json({ success: false, error: "Database error" });
-        }
+    const [weeklyLimit, totalExpenseWeekly, totalIncomeWeekly] =
+      await Promise.all([
+        fetchTotalWeeklyLimit(userId),
+        fetchTotalExpenseWeekly(userId),
+      ]);
 
-        // Calculate total spend for 'Expense' category (excluding 'Saving' category)
+    const userData = {
+      weeklyLimit,
+      totalSpent: totalExpenseWeekly,
+    };
+
+    console.log(userData);
+
+    getAIRecommendation(userData, question, mode)
+      .then((recommendation) => {
         db.query(
-          "SELECT SUM(t.Amount) as totalSpent FROM Transaction t " +
-            "JOIN Category c ON t.CategoryID = c.ID " +
-            "WHERE t.UserID = ? AND c.Name != 'Saving'",
-          [userId],
-          (err, spentResult) => {
+          "INSERT INTO AIRecommendation (UserID, Question, Recommendation) VALUES (?, ?, ?)",
+          [userId, question, recommendation],
+          (err, result) => {
             if (err) {
-              console.error("Error fetching spent data:", err);
+              console.error("Error inserting recommendation:", err);
               return res
                 .status(500)
                 .json({ success: false, error: "Database error" });
             }
-
-            // Fetch total income
-            db.query(
-              "SELECT SUM(i.Amount) AS totalIncome FROM Income i WHERE i.UserID = ?",
-              [userId],
-              (err, incomeResult) => {
-                if (err) {
-                  console.error("Error fetching income data:", err);
-                  return res
-                    .status(500)
-                    .json({ success: false, error: "Database error" });
-                }
-
-                // Prepare user data
-                const userData = {
-                  weeklyLimit: user[0]?.WeeklyLimit || 0,
-                  totalSpent: spentResult[0]?.totalSpent || 0,
-                  totalIncome: incomeResult[0]?.totalIncome || 0,
-                };
-
-                console.log(userData);
-
-                // Get AI recommendation
-                getAIRecommendation(userData, question, mode)
-                  .then((recommendation) => {
-                    // Insert recommendation into the AIRecommendation table
-                    db.query(
-                      "INSERT INTO AIRecommendation (UserID, Question, Recommendation) VALUES (?, ?, ?)",
-                      [userId, question, recommendation],
-                      (err, result) => {
-                        if (err) {
-                          console.error("Error inserting recommendation:", err);
-                          return res
-                            .status(500)
-                            .json({ success: false, error: "Database error" });
-                        }
-                        // Send response with recommendation
-                        res.json({ success: true, recommendation });
-                      }
-                    );
-                  })
-                  .catch((aiError) => {
-                    console.error("AI recommendation error: ", aiError);
-                    return res.status(500).json({
-                      success: false,
-                      error: "Failed to get recommendation",
-                    });
-                  });
-              }
-            );
+            res.json({ success: true, recommendation });
           }
         );
-      }
-    );
+      })
+      .catch((aiError) => {
+        console.error("AI recommendation error: ", aiError);
+        return res.status(500).json({
+          success: false,
+          error: "Failed to get recommendation",
+        });
+      });
   } catch (error) {
     console.error("General error: ", error);
     res
@@ -97,7 +94,6 @@ exports.getUserRecommendationHistory = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Fetch recommendation history
     db.query(
       "SELECT * FROM AIRecommendation WHERE UserID = ? ORDER BY CreatedAt DESC",
       [userId],

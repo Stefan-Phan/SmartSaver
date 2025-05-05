@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { getAIRecommendation } from "@/lib/api/aiAPI";
-import { FaPaperPlane } from "react-icons/fa";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserCircle, faRobot } from "@fortawesome/free-solid-svg-icons";
+import { Send, User, Bot, Loader2, MessageSquare } from "lucide-react";
 
 interface Message {
   text: string;
@@ -17,7 +15,9 @@ const AskAI: React.FC = () => {
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [mode, setMode] = useState<string>("Fun");
+  const [loading, setLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -40,11 +40,12 @@ const AskAI: React.FC = () => {
 
   const handleAskAI = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!question.trim()) return;
+    if (!question.trim() || loading) return;
 
     const userMessage: Message = { text: question, sender: "user" };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setQuestion("");
+    setLoading(true);
 
     try {
       const data = await getAIRecommendation(token, question, mode);
@@ -58,60 +59,136 @@ const AskAI: React.FC = () => {
         sender: "ai",
       };
       setMessages((prevMessages) => [...prevMessages, aiErrorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getModeColor = () => {
+    switch (mode) {
+      case "Fun":
+        return "bg-violet-500 hover:bg-violet-600";
+      case "Sad":
+        return "bg-blue-500 hover:bg-blue-600";
+      case "Angry":
+        return "bg-red-500 hover:bg-red-600";
+      case "Wise":
+        return "bg-amber-500 hover:bg-amber-600";
+      default:
+        return "bg-emerald-500 hover:bg-emerald-600";
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col h-screen">
-      <div className="flex-grow flex flex-col bg-transparent">
-        <div className="flex-grow overflow-y-auto p-2">
+    <div className="flex flex-col bg-gray-50 shadow-lg overflow-hidden border border-gray-200 h-screen">
+      <div className="bg-white px-6 py-4 border-b border-gray-200 sticky top-0 z-10">
+        <h2 className="text-xl font-semibold text-gray-800">AI Assistant</h2>
+        <p className="text-sm text-gray-500">Ask me anything in {mode} mode</p>
+      </div>
+
+      <div
+        ref={chatContainerRef}
+        className="flex-grow flex flex-col bg-gray-50 p-4 overflow-y-auto"
+      >
+        {messages.length === 0 && (
+          <div className="flex items-center justify-center h-full text-center text-gray-400">
+            <div>
+              <MessageSquare size={48} className="mx-auto mb-3 text-gray-300" />
+              <p>No messages yet. Start a conversation!</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-grow space-y-4">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex items-center p-3 m-1 rounded-xl word-wrap break-word ${
+              className={`flex items-start gap-x-3 max-w-3/4 ${
                 message.sender === "user"
-                  ? "bg-green-200 self-end flex-row-reverse gap-x-2"
-                  : "bg-white self-start justify-start"
+                  ? "ml-auto flex-row-reverse"
+                  : "mr-auto"
               }`}
             >
-              <div className="flex items-center justify-center">
-                <FontAwesomeIcon
-                  icon={message.sender === "user" ? faUserCircle : faRobot}
-                  size="2x"
-                />
+              <div
+                className={`flex items-center justify-center rounded-full w-8 h-8 ${
+                  message.sender === "user"
+                    ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-white"
+                    : "bg-gradient-to-br from-indigo-400 to-purple-500 text-white"
+                }`}
+              >
+                {message.sender === "user" ? (
+                  <User size={16} />
+                ) : (
+                  <Bot size={16} />
+                )}
               </div>
-              <div className="flex-grow-0">{message.text}</div>
+              <div
+                className={`py-2 px-4 rounded-2xl shadow-sm ${
+                  message.sender === "user"
+                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 text-gray-800"
+                    : "bg-white border border-gray-100 text-gray-800"
+                }`}
+              >
+                {message.text}
+              </div>
             </div>
           ))}
+
+          {loading && (
+            <div className="flex items-start gap-x-3 mr-auto">
+              <div className="flex items-center justify-center rounded-full w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 text-white">
+                <Bot size={16} />
+              </div>
+              <div className="py-3 px-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin text-indigo-500" />
+                  <span className="text-gray-500 text-sm">Thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
-        <div className="flex items-center p-2 bg-gray-100 border-t border-gray-300">
-          <form onSubmit={handleAskAI} className="flex flex-grow">
-            <input
-              type="text"
-              value={question}
-              onChange={handleInputChange}
-              placeholder="Type your question..."
-              className="flex-grow p-2 border rounded-xl mr-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-            />
-            <select
-              value={mode}
-              onChange={handleModeChange}
-              className="p-2 border rounded-xl mr-2 w-24 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              <option value="Fun">Fun</option>
-              <option value="Sad">Sad</option>
-              <option value="Angry">Angry</option>
-              <option value="Wise">Wise</option>
-            </select>
-            <button
-              type="submit"
-              className="bg-emerald-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
-            >
-              <FaPaperPlane />
-            </button>
-          </form>
-        </div>
+      </div>
+
+      <div className="bg-white p-4 border-t border-gray-200 sticky bottom-0">
+        <form onSubmit={handleAskAI} className="flex items-center gap-3">
+          <input
+            type="text"
+            value={question}
+            onChange={handleInputChange}
+            placeholder="Type your question..."
+            className="flex-grow p-3 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700 shadow-sm"
+            disabled={loading}
+          />
+
+          <select
+            value={mode}
+            onChange={handleModeChange}
+            className="p-3 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700 shadow-sm w-28"
+            disabled={loading}
+          >
+            <option value="Fun">Fun</option>
+            <option value="Sad">Sad</option>
+            <option value="Angry">Angry</option>
+            <option value="Wise">Wise</option>
+          </select>
+
+          <button
+            type="submit"
+            disabled={loading || !question.trim()}
+            className={`${getModeColor()} text-white rounded-full w-12 h-12 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-300 transition-colors duration-200 shadow-md ${
+              loading || !question.trim() ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {loading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );

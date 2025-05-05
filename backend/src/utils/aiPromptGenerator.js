@@ -2,15 +2,14 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 function generatePrompt(userData, question, mode) {
-  const { weeklyLimit, totalSpent, totalIncome } = userData;
+  const { weeklyLimit, totalSpent } = userData;
   const remainingBudget = weeklyLimit - totalSpent;
 
   let systemPrompt = `You are a financial advisor AI helping someone decide whether to make a purchase.
     Here's their financial situation:
     - Weekly spending limit: $${weeklyLimit}
     - Amount spent so far: $${totalSpent}
-    - Remaining budget: $${remainingBudget}
-    - Total income: $${totalIncome}`;
+    - Remaining budget: $${remainingBudget}`;
 
   switch (mode) {
     case "Fun":
