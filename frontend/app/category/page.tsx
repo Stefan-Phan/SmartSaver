@@ -22,6 +22,7 @@ import {
   getTotalWeeklyLimit,
 } from "@/lib/api/categoryAPI";
 import { getTransactions as fetchTransactionsApi } from "@/lib/api/transactionAPI";
+import CategoryLimitChart from "../components/category/CategoryLimitChart";
 
 export default function CategoryPage() {
   // State
@@ -38,13 +39,9 @@ export default function CategoryPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [newCategory, setNewCategory] = useState<{ Name: string }>({
-    Name: "",
-  });
-
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [categoriesPerPage] = useState(10);
+  const [categoriesPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
 
   // Initial token load
@@ -168,16 +165,20 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-7xl">
-      <div className="mb-4 text-right text-indigo-700 font-semibold">
-        Total Weekly Limit: ${totalWeeklyLimit}
-      </div>
-
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddCategory}
       />
+
+      {/* Category Limit Chart */}
+      {categories.length > 0 && totalWeeklyLimit !== null && (
+        <CategoryLimitChart
+          categories={categories}
+          totalWeeklyLimit={totalWeeklyLimit}
+        />
+      )}
 
       {/* Category List */}
       <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
