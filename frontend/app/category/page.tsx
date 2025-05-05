@@ -1,67 +1,82 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+
+// Icons
+import { Plus } from "lucide-react";
+
+// Types
+import { Category } from "@/types/Category";
+import { Transaction } from "@/types/Transaction";
+
+// Components
+import AddCategoryModal from "../components/category/AddCategoryModal";
+import Pagination from "../components/transaction/Pagination";
+import CategoryRow from "../components/category/CategoryRow";
+
+// API Functions
 import {
   getCategories as fetchCategoriesApi,
   addCategory as addCategoryApi,
   deleteCategory as deleteCategoryApi,
+  getTotalWeeklyLimit,
 } from "@/lib/api/categoryAPI";
 import { getTransactions as fetchTransactionsApi } from "@/lib/api/transactionAPI";
-import { Category } from "@/types/Category";
-import { Transaction } from "@/types/Transaction";
-import { Plus } from "lucide-react";
 
-// Import components (you'll need to create these)
-import AddCategoryModal from "../components/category/AddCategoryModal";
-import Pagination from "../components/transaction/Pagination";
-
-const CategoryPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [newCategory, setNewCategory] = useState<{ Name: string }>({
-    Name: "",
-  });
+export default function CategoryPage() {
+  // State
   const [token, setToken] = useState<string>("");
   const [error, setError] = useState<string>("");
+
+  const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categoryUsage, setCategoryUsage] = useState<{
     [categoryId: number]: { count: number; total: number };
   }>({});
+
+  const [totalWeeklyLimit, setTotalWeeklyLimit] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Pagination states
+  const [newCategory, setNewCategory] = useState<{ Name: string }>({
+    Name: "",
+  });
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [categoriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Initial token load
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-    }
+    if (storedToken) setToken(storedToken);
   }, []);
 
+  // Fetch data after token is set
   useEffect(() => {
     if (token) {
       fetchCategories();
       fetchTransactions();
+      fetchTotalWeeklyLimit();
     }
   }, [token]);
 
+  // Calculate usage after data is loaded
   useEffect(() => {
-    if (transactions.length > 0 && categories.length > 0) {
+    if (transactions.length && categories.length) {
       calculateCategoryUsage();
     }
     setIsLoading(false);
   }, [transactions, categories]);
 
+  // Update pagination when categories change
   useEffect(() => {
-    // Calculate total pages whenever categories change
     setTotalPages(Math.ceil(categories.length / categoriesPerPage));
-    // Reset to first page when categories change
     setCurrentPage(1);
   }, [categories, categoriesPerPage]);
 
+  // API Calls
   const fetchCategories = async () => {
     try {
       const data = await fetchCategoriesApi(token);
@@ -74,10 +89,25 @@ const CategoryPage: React.FC = () => {
 
   const fetchTransactions = async () => {
     try {
+      setIsLoading(true);
       const data = await fetchTransactionsApi(token);
       setTransactions(data);
     } catch (err: any) {
       console.error("Error fetching transactions:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTotalWeeklyLimit = async () => {
+    try {
+      setIsLoading(true);
+      const total = await getTotalWeeklyLimit(token);
+      setTotalWeeklyLimit(total);
+    } catch (err: any) {
+      console.error("Error fetching total weekly limit:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,25 +115,20 @@ const CategoryPage: React.FC = () => {
     const usage: { [categoryId: number]: { count: number; total: number } } =
       {};
 
-    transactions.forEach((transaction) => {
-      if (usage[transaction.CategoryID]) {
-        usage[transaction.CategoryID].count += 1;
-        usage[transaction.CategoryID].total += parseFloat(transaction.Amount);
+    transactions.forEach((tx) => {
+      const amount = parseFloat(tx.Amount);
+      if (usage[tx.CategoryID]) {
+        usage[tx.CategoryID].count += 1;
+        usage[tx.CategoryID].total += amount;
       } else {
-        usage[transaction.CategoryID] = {
-          count: 1,
-          total: parseFloat(transaction.Amount),
-        };
+        usage[tx.CategoryID] = { count: 1, total: amount };
       }
     });
 
     setCategoryUsage(usage);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewCategory({ ...newCategory, [e.target.name]: e.target.value });
-  };
-
+  // Event Handlers
   const handleAddCategory = async (categoryData: any) => {
     try {
       await addCategoryApi(token, categoryData);
@@ -143,6 +168,10 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 max-w-7xl">
+      <div className="mb-4 text-right text-indigo-700 font-semibold">
+        Total Weekly Limit: ${totalWeeklyLimit}
+      </div>
+
       {/* Add Category Modal */}
       <AddCategoryModal
         isOpen={isModalOpen}
@@ -190,7 +219,7 @@ const CategoryPage: React.FC = () => {
                       Category
                     </th>
                     <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
-                      Usage Count
+                      Weekly Limit
                     </th>
                     <th className="px-6 py-4 text-xs font-semibold text-purple-600 uppercase">
                       Total Amount
@@ -202,28 +231,14 @@ const CategoryPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {getCurrentCategories().map((category) => (
-                    <tr key={category.ID} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap font-medium">
-                        {category.Name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {categoryUsage[category.ID]?.count || 0} transaction(s)
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        $
-                        {categoryUsage[category.ID]?.total?.toFixed(2) ||
-                          "0.00"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeleteCategory(category.ID)}
-                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed"
-                          disabled={categoryUsage[category.ID]?.count > 0}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
+                    <CategoryRow
+                      key={category.ID}
+                      category={category}
+                      usage={
+                        categoryUsage[category.ID] || { count: 0, total: 0 }
+                      }
+                      onDelete={handleDeleteCategory}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -242,6 +257,4 @@ const CategoryPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default CategoryPage;
+}

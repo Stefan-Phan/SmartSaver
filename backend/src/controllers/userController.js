@@ -12,11 +12,10 @@ exports.getUsers = (req, res) => {
 
 // Add user
 exports.addUser = (req, res) => {
-  const { Name, Email, WeeklyLimit, Password } = req.body;
-  const sql =
-    "INSERT INTO User (Name, Email, WeeklyLimit, Password) VALUES (?, ?, ?, ?)";
+  const { Name, Email, Password } = req.body;
+  const sql = "INSERT INTO User (Name, Email, Password) VALUES (?, ?, ?, ?)";
 
-  db.query(sql, [Name, Email, WeeklyLimit, Password], (err, result) => {
+  db.query(sql, [Name, Email, Password], (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -58,25 +57,5 @@ exports.deleteUser = (req, res) => {
     }
 
     res.json({ message: "User deleted successfully " });
-  });
-};
-
-// Update WeeklyLimit
-exports.updateWeeklyLimit = (req, res) => {
-  const userIdFromToken = req.userId;
-  const { WeeklyLimit } = req.body;
-
-  const sql = "UPDATE User SET WeeklyLimit = ? WHERE ID = ?";
-
-  db.query(sql, [WeeklyLimit, userIdFromToken], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({ message: "Weekly limit updated successfully!" });
   });
 };
