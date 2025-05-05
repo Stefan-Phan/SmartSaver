@@ -35,6 +35,29 @@ export const addCategory = async (
   }
 };
 
+export const updateCategory = async (
+  token: string,
+  id: number,
+  categoryData: Category
+): Promise<Category> => {
+  try {
+    const response = await axios.put<Category>(
+      `${API_URL}/${id}`,
+      categoryData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update category"
+    );
+  }
+};
+
 export const deleteCategory = async (
   token: string,
   id: number

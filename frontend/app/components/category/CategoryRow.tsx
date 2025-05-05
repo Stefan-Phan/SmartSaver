@@ -1,37 +1,51 @@
+// components/category/CategoryRow.js
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Category } from "@/types/Category";
 
 interface CategoryRowProps {
   category: Category;
-  usage: {
-    count: number;
-    total: number;
-  };
+  usage: { count: number; total: number };
   onDelete: (id: number) => void;
+  onEdit: (category: Category) => void;
 }
 
-export default function CategoryRow({
+const CategoryRow: React.FC<CategoryRowProps> = ({
   category,
   usage,
   onDelete,
-}: CategoryRowProps) {
+  onEdit, // Destructure the onEdit prop
+}) => {
   return (
-    <tr key={category.ID} className="hover:bg-gray-50">
-      <td className="px-6 py-4 whitespace-nowrap font-medium">
-        {category.Name}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">${category.WeeklyLimit}</td>
+    <tr key={category.ID}>
       <td className="px-6 py-4 whitespace-nowrap">
-        ${usage?.total?.toFixed(2) || "0.00"}
+        <div className="text-sm text-gray-900">{category.Name}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-sm text-gray-900">${category.WeeklyLimit}</div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-sm text-gray-900">
+          ${usage.total.toFixed(2)} ({usage.count} transactions)
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button
+          onClick={() => onEdit(category)} // Call the onEdit function
+          className="text-indigo-600 hover:text-indigo-900 mr-2"
+        >
+          <PencilIcon className="h-5 w-5 inline-block" />
+          <span className="sr-only">Edit</span>
+        </button>
         <button
           onClick={() => onDelete(category.ID)}
-          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer focus:outline-none disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={usage?.count > 0}
+          className="text-red-600 hover:text-red-900"
         >
-          Delete
+          <TrashIcon className="h-5 w-5 inline-block" />
+          <span className="sr-only">Delete</span>
         </button>
       </td>
     </tr>
   );
-}
+};
+
+export default CategoryRow;

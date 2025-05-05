@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 
 // Icons
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react"; // Import the Edit icon
 
 // Types
 import { Category } from "@/types/Category";
@@ -11,6 +11,7 @@ import { Transaction } from "@/types/Transaction";
 
 // Components
 import AddCategoryModal from "../components/category/AddCategoryModal";
+import EditCategoryModal from "../components/category/EditCategoryModal"; // Import the new modal
 import Pagination from "../components/transaction/Pagination";
 import CategoryRow from "../components/category/CategoryRow";
 
@@ -19,6 +20,7 @@ import {
   getCategories as fetchCategoriesApi,
   addCategory as addCategoryApi,
   deleteCategory as deleteCategoryApi,
+  updateCategory as updateCategoryApi, // Import the update API function
   getTotalWeeklyLimit,
 } from "@/lib/api/categoryAPI";
 import { getTransactions as fetchTransactionsApi } from "@/lib/api/transactionAPI";
@@ -37,7 +39,9 @@ export default function CategoryPage() {
 
   const [totalWeeklyLimit, setTotalWeeklyLimit] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for edit modal
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null); // State for the category being edited
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,7 +134,31 @@ export default function CategoryPage() {
     try {
       await addCategoryApi(token, categoryData);
       fetchCategories();
-      setIsModalOpen(false);
+      fetchTotalWeeklyLimit();
+      setIsAddModalOpen(false);
+      setError("");
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleOpenEditModal = (category: Category) => {
+    setEditingCategory(category);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingCategory(null);
+    setIsEditModalOpen(false);
+  };
+
+  const handleUpdateCategory = async (categoryData: Category) => {
+    if (!editingCategory) return;
+    try {
+      await updateCategoryApi(token, editingCategory.ID, categoryData);
+      fetchCategories();
+      fetchTotalWeeklyLimit();
+      handleCloseEditModal();
       setError("");
     } catch (err: any) {
       setError(err.message);
@@ -149,6 +177,7 @@ export default function CategoryPage() {
       }
 
       await deleteCategoryApi(token, id);
+      fetchTotalWeeklyLimit();
       fetchCategories();
       setError("");
     } catch (err: any) {
@@ -165,12 +194,26 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-7xl">
+      <div className="mb-4 text-right text-indigo-700 font-semibold">
+        Total Weekly Limit: ${totalWeeklyLimit}
+      </div>
+
       {/* Add Category Modal */}
       <AddCategoryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddCategory}
       />
+
+      {/* Edit Category Modal */}
+      {editingCategory && (
+        <EditCategoryModal
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          onUpdate={handleUpdateCategory}
+          category={editingCategory}
+        />
+      )}
 
       {/* Category Limit Chart */}
       {categories.length > 0 && totalWeeklyLimit !== null && (
@@ -193,7 +236,7 @@ export default function CategoryPage() {
             CATEGORIES
           </h1>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsAddModalOpen(true)}
             className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 transition-colors cursor-pointer"
           >
             <Plus size={18} className="mr-2" />
@@ -239,6 +282,7 @@ export default function CategoryPage() {
                         categoryUsage[category.ID] || { count: 0, total: 0 }
                       }
                       onDelete={handleDeleteCategory}
+                      onEdit={handleOpenEditModal}
                     />
                   ))}
                 </tbody>
