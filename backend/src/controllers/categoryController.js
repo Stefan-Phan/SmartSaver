@@ -3,7 +3,8 @@ const db = require("../config/db");
 // Get all categories for a user
 exports.getAllCategories = (req, res) => {
   const userId = req.userId;
-  const sql = "SELECT ID, Name, WeeklyLimit FROM Category WHERE UserID = ?";
+  const sql =
+    "SELECT ID, Name, WeeklyLimit, TotalSpent FROM Category WHERE UserID = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });

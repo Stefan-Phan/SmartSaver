@@ -64,7 +64,7 @@ exports.addTransaction = (req, res) => {
     }
 
     const getCategorySQL =
-      "SELECT ID FROM Category WHERE UserID = ? AND Name = ?";
+      "SELECT ID, TotalSpent FROM Category WHERE UserID = ? AND Name = ?";
 
     db.query(getCategorySQL, [userID, CategoryName], (err, categoryResult) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -76,12 +76,16 @@ exports.addTransaction = (req, res) => {
       }
 
       const CategoryID = categoryResult[0].ID;
+      const currentTotalSpent = categoryResult[0].TotalSpent || 0;
+
+      const expenseAmount = Math.abs(Amount);
+
       const sql =
         "INSERT INTO Transaction (UserID, Name, Amount, CategoryID, Type, CreatedAt) VALUES (?, ?, ?, ?, ?, ?)";
       const values = [
         userID,
         Name,
-        Amount,
+        expenseAmount,
         CategoryID,
         "expense",
         createdAtValue,
@@ -89,10 +93,33 @@ exports.addTransaction = (req, res) => {
 
       db.query(sql, values, (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({
-          message: "Expense added successfully!",
-          transactionID: result.insertId,
-        });
+
+        const parsedCurrentTotal = parseFloat(currentTotalSpent) || 0;
+        const parsedExpenseAmount = parseFloat(expenseAmount) || 0;
+
+        const newTotalSpent = parsedCurrentTotal + parsedExpenseAmount;
+
+        const updateCategorySQL =
+          "UPDATE Category SET TotalSpent = ? WHERE ID = ? AND UserID = ?";
+
+        db.query(
+          updateCategorySQL,
+          [newTotalSpent, CategoryID, userID],
+          (updateErr) => {
+            if (updateErr) {
+              console.error("Error updating TotalSpent:", updateErr);
+              return res.status(500).json({
+                error: "Failed to update TotalSpent for the category",
+              });
+            }
+
+            res.json({
+              message: "Expense added successfully, and TotalSpent updated!",
+              transactionID: result.insertId,
+              newTotalSpent: newTotalSpent.toFixed(2),
+            });
+          }
+        );
       });
     });
   }
@@ -112,82 +139,224 @@ exports.updateTransaction = (req, res) => {
       .json({ error: "Transaction Type ('income' or 'expense') is required." });
   }
 
-  let sql;
-  let values;
-
-  if (Type.toLowerCase() === "income") {
-    sql = `
-    UPDATE Transaction
-    SET Name = ?, Amount = ?, Type = ?
-    WHERE ID = ? AND UserID = ?
+  const getTransactionSQL = `
+    SELECT t.Amount, t.Type, t.CategoryID, c.Name as CategoryName, c.TotalSpent
+    FROM Transaction t
+    LEFT JOIN Category c ON t.CategoryID = c.ID
+    WHERE t.ID = ? AND t.UserID = ?
   `;
 
-    values = [Name, Math.abs(Amount), "income", transactionId, userID];
+  db.query(getTransactionSQL, [transactionId, userID], (err, transResult) => {
+    if (err) return res.status(500).json({ error: err.message });
 
-    db.query(sql, values, (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      if (result.affectedRows === 0)
-        return res.status(404).json({ message: "Income record not found" });
-      res.json({ message: "Income record updated successfully!" });
-    });
-  } else {
-    if (!CategoryName) {
+    if (transResult.length === 0) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    const currentTransaction = transResult[0];
+    let sql;
+    let values;
+
+    if (Type.toLowerCase() === "income") {
+      if (
+        currentTransaction.Type.toLowerCase() === "expense" &&
+        currentTransaction.CategoryID
+      ) {
+        const updateCategorySQL = `
+          UPDATE Category
+          SET TotalSpent = TotalSpent - ?
+          WHERE ID = ? AND UserID = ?
+        `;
+
+        db.query(
+          updateCategorySQL,
+          [currentTransaction.Amount, currentTransaction.CategoryID, userID],
+          (err) => {
+            if (err)
+              console.error(
+                "Error updating previous category TotalSpent:",
+                err
+              );
+          }
+        );
+      }
+
+      sql = `
+        UPDATE Transaction
+        SET Name = ?, Amount = ?, CategoryID = NULL, Type = ?
+        WHERE ID = ? AND UserID = ?
+      `;
+
+      values = [Name, Math.abs(Amount), "income", transactionId, userID];
+
+      db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0)
+          return res.status(404).json({ message: "Income record not found" });
+        res.json({ message: "Income record updated successfully!" });
+      });
+    } else {
       if (!CategoryName) {
         return res
           .status(400)
           .json({ error: "CategoryName is required for expenses." });
       }
-    }
 
-    const getCategorySQL = `
-      SELECT
-        ID
-      FROM
-        Category
-      WHERE
-        UserID = ? AND Name = ?
-    `;
-
-    db.query(getCategorySQL, [userID, CategoryName], (err, categoryResult) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      if (categoryResult.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "Category not found for this user" });
-      }
-
-      const CategoryID = categoryResult[0].ID;
-      sql = `
-        UPDATE Transaction
-        SET Name = ?, Amount = ?, CategoryID = ?, Type = ?
-        WHERE ID = ? AND UserID = ?
+      const getCategorySQL = `
+        SELECT
+          ID, TotalSpent
+        FROM
+          Category
+        WHERE
+          UserID = ? AND Name = ?
       `;
-      values = [Name, Amount, CategoryID, "expense", transactionId, userID];
 
-      db.query(sql, values, (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (result.affectedRows === 0)
-          return res.status(404).json({ message: "Expense not found" });
-        res.json({ message: "Expense updated successfully!" });
-      });
-    });
-  }
+      db.query(
+        getCategorySQL,
+        [userID, CategoryName],
+        (err, categoryResult) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          if (categoryResult.length === 0) {
+            return res
+              .status(404)
+              .json({ message: "Category not found for this user" });
+          }
+
+          const CategoryID = categoryResult[0].ID;
+          const expenseAmount = Math.abs(Amount);
+
+          if (
+            currentTransaction.Type.toLowerCase() === "expense" &&
+            currentTransaction.CategoryID &&
+            currentTransaction.CategoryID !== CategoryID
+          ) {
+            const updateOldCategorySQL = `
+            UPDATE Category
+            SET TotalSpent = TotalSpent - ?
+            WHERE ID = ? AND UserID = ?
+          `;
+
+            db.query(
+              updateOldCategorySQL,
+              [
+                currentTransaction.Amount,
+                currentTransaction.CategoryID,
+                userID,
+              ],
+              (err) => {
+                if (err)
+                  console.error("Error updating old category TotalSpent:", err);
+              }
+            );
+          }
+
+          let amountDifference = expenseAmount;
+          if (
+            currentTransaction.Type.toLowerCase() === "expense" &&
+            currentTransaction.CategoryID === CategoryID
+          ) {
+            amountDifference = expenseAmount - currentTransaction.Amount;
+          }
+
+          const parsedCurrentTotal =
+            parseFloat(categoryResult[0].TotalSpent) || 0;
+          const parsedAmountDifference = parseFloat(amountDifference) || 0;
+          const updatedTotalSpent = parsedCurrentTotal + parsedAmountDifference;
+
+          const updateNewCategorySQL = `
+          UPDATE Category
+          SET TotalSpent = ?
+          WHERE ID = ? AND UserID = ?
+        `;
+
+          db.query(
+            updateNewCategorySQL,
+            [updatedTotalSpent, CategoryID, userID],
+            (err) => {
+              if (err)
+                console.error("Error updating new category TotalSpent:", err);
+            }
+          );
+
+          sql = `
+          UPDATE Transaction
+          SET Name = ?, Amount = ?, CategoryID = ?, Type = ?
+          WHERE ID = ? AND UserID = ?
+        `;
+          values = [
+            Name,
+            expenseAmount,
+            CategoryID,
+            "expense",
+            transactionId,
+            userID,
+          ];
+
+          db.query(sql, values, (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.affectedRows === 0)
+              return res.status(404).json({ message: "Expense not found" });
+            res.json({ message: "Expense updated successfully!" });
+          });
+        }
+      );
+    }
+  });
 };
 
 exports.deleteTransaction = (req, res) => {
   const userID = req.userId;
   const transactionId = req.params.id;
 
-  const sql = "DELETE FROM Transaction WHERE ID = ? AND UserID = ?";
+  const getTransactionSQL = `
+    SELECT Amount, Type, CategoryID 
+    FROM Transaction 
+    WHERE ID = ? AND UserID = ?
+  `;
 
-  db.query(sql, [transactionId, userID], (err, result) => {
+  db.query(getTransactionSQL, [transactionId, userID], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (result.affectedRows === 0)
+
+    if (result.length === 0) {
       return res
         .status(404)
         .json({ message: "Transaction not found or unauthorized" });
-    res.json({ message: "Transaction deleted successfully" });
+    }
+
+    const transaction = result[0];
+
+    if (
+      transaction.Type.toLowerCase() === "expense" &&
+      transaction.CategoryID
+    ) {
+      const updateCategorySQL = `
+        UPDATE Category
+        SET TotalSpent = TotalSpent - ?
+        WHERE ID = ? AND UserID = ?
+      `;
+
+      const amountToSubtract = parseFloat(transaction.Amount) || 0;
+
+      db.query(
+        updateCategorySQL,
+        [amountToSubtract, transaction.CategoryID, userID],
+        (err) => {
+          if (err)
+            console.error(
+              "Error updating category TotalSpent on deletion:",
+              err
+            );
+        }
+      );
+    }
+
+    const sql = "DELETE FROM Transaction WHERE ID = ? AND UserID = ?";
+
+    db.query(sql, [transactionId, userID], (err, deleteResult) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "Transaction deleted successfully" });
+    });
   });
 };
 
@@ -238,8 +407,6 @@ exports.getBalance = (req, res) => {
 
 exports.getWeeklyReport = (req, res) => {
   const userID = req.userId;
-
-  // SQL query to get weekly transaction summaries
   const sql = `
     SELECT 
       YEAR(CreatedAt) AS Year,
@@ -271,7 +438,6 @@ exports.getWeeklyReport = (req, res) => {
         .json({ message: "No transaction data found for this user" });
     }
 
-    // Format the response
     const weeklyReports = results.map((week) => ({
       weekPeriod: `${week.WeekStart} to ${week.WeekEnd}`,
       year: week.Year,
