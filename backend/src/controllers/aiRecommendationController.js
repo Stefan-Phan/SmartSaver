@@ -1,65 +1,24 @@
 const { getAIRecommendation } = require("../utils/aiPromptGenerator");
 const db = require("../config/db");
 
-// --- Reusable Data Fetching Functions (Weekly) ---
-
-async function fetchTotalWeeklyLimit(userId) {
-  return new Promise((resolve, reject) => {
-    db.query(
-      "SELECT SUM(WeeklyLimit) AS TotalWeeklyLimit FROM Category WHERE UserID = ?",
-      [userId],
-      (err, results) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(results[0]?.TotalWeeklyLimit || 0);
-        }
-      }
-    );
-  });
-}
-
-async function fetchTotalExpenseWeekly(userId) {
-  return new Promise((resolve, reject) => {
-    const sql = `
-      SELECT SUM(t.Amount) AS totalExpenseWeekly
-      FROM Transaction t
-      WHERE t.UserID = ?
-        AND t.Type = 'expense'
-        AND WEEK(t.CreatedAt, 1) = WEEK(CURDATE(), 1)
-        AND YEAR(t.CreatedAt) = YEAR(CURDATE())
-    `;
-    db.query(sql, [userId], (err, expenseResult) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(expenseResult[0]?.totalExpenseWeekly || 0);
-      }
-    });
-  });
-}
-
-// --- Controller Logic ---
-
 exports.getRecommendation = async (req, res) => {
   try {
     const userId = req.userId;
-    const { question, mode } = req.body;
+    const { question, mode, categoryName, itemPrice } = req.body;
 
-    const [weeklyLimit, totalExpenseWeekly, totalIncomeWeekly] =
-      await Promise.all([
-        fetchTotalWeeklyLimit(userId),
-        fetchTotalExpenseWeekly(userId),
-      ]);
+    // const [weeklyLimit, totalExpenseWeekly, totalIncomeWeekly] =
+    //   await Promise.all([
+    //     fetchTotalWeeklyLimit(userId),
+    //     fetchTotalExpenseWeekly(userId),
+    //   ]);
 
     const userData = {
-      weeklyLimit,
-      totalSpent: totalExpenseWeekly,
+      userID: userId,
+      itemPrice,
+      categoryName,
     };
 
-    console.log(userData);
-
-    getAIRecommendation(userData, question, mode)
+    getAIRecommendation(userData, question, categoryName, mode)
       .then((recommendation) => {
         db.query(
           "INSERT INTO AIRecommendation (UserID, Question, Recommendation) VALUES (?, ?, ?)",
