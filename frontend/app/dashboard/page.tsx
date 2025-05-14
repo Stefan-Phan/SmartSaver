@@ -185,9 +185,8 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="flex font-sans">
-      <div className="bg-white p-6 w-3/4">
-        <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
+    <div className="flex">
+      <div className="p-6 w-3/4">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             {error}
