@@ -4,18 +4,10 @@ const db = require("../config/db");
 exports.getRecommendation = async (req, res) => {
   try {
     const userId = req.userId;
-    const { question, mode, categoryName, itemPrice } = req.body;
-
-    // const [weeklyLimit, totalExpenseWeekly, totalIncomeWeekly] =
-    //   await Promise.all([
-    //     fetchTotalWeeklyLimit(userId),
-    //     fetchTotalExpenseWeekly(userId),
-    //   ]);
+    const { question, mode, categoryName } = req.body;
 
     const userData = {
       userID: userId,
-      itemPrice,
-      categoryName,
     };
 
     getAIRecommendation(userData, question, categoryName, mode)

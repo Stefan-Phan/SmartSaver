@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getAIRecommendation } from "@/lib/api/aiAPI";
 import { Send, User, Bot, Loader2, MessageSquare } from "lucide-react";
+import { Category } from "@/types/Category";
+import { getCategories } from "@/lib/api/categoryAPI";
 
 interface Message {
   text: string;
@@ -10,9 +12,11 @@ interface Message {
 }
 
 const AskAI: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [token, setToken] = useState<string>("");
+  const [categoryName, setCategoryName] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [mode, setMode] = useState<string>("Fun");
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,11 +31,30 @@ const AskAI: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (token) {
+      fetchCategories();
+    }
+  }, [token]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories(token);
+      setCategories(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuestion(e.target.value);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategoryName(e.target.value);
   };
 
   const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -40,15 +63,21 @@ const AskAI: React.FC = () => {
 
   const handleAskAI = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!question.trim() || loading) return;
+    if (!question.trim() || !categoryName.trim() || loading) return;
 
     const userMessage: Message = { text: question, sender: "user" };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setQuestion("");
+    setCategoryName("");
     setLoading(true);
 
     try {
-      const data = await getAIRecommendation(token, question, mode);
+      const data = await getAIRecommendation(
+        token,
+        question,
+        categoryName,
+        mode
+      );
       const aiMessage: Message = { text: data.recommendation, sender: "ai" };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
       setError("");
@@ -162,6 +191,21 @@ const AskAI: React.FC = () => {
             className="flex-grow p-3 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700 shadow-sm"
             disabled={loading}
           />
+
+          <select
+            name="CategoryName"
+            value={categoryName}
+            onChange={handleCategoryChange}
+            className="p-3 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700 shadow-sm w-42"
+            disabled={loading}
+          >
+            <option value="">Select Category</option>
+            {categories.map((category) => (
+              <option key={category.ID} value={category.Name}>
+                {category.Name}
+              </option>
+            ))}
+          </select>
 
           <select
             value={mode}

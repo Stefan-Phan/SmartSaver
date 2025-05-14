@@ -1,22 +1,23 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const db = require("../config/db");
 
 async function getCategoryData(userID, categoryName) {
-  const categoryData = await db.query(
+  const [categoryData] = await db.promise().query(
     `
     SELECT WeeklyLimit, TotalSpent FROM Category WHERE UserID = ? AND Name = ?`,
     [userID, categoryName]
   );
 
-  if (!categoryData) {
+  if (!categoryData || categoryData.length === 0) {
     throw new Error(`Category ${categoryName} not found for user ${userID}`);
   }
 
-  return categoryData;
+  return categoryData[0];
 }
 
 async function generatePrompt(userData, question, categoryName, mode) {
-  const { userID, itemPrice } = userData;
+  const { userID } = userData;
 
   // Fetch category data
   const categoryData = await getCategoryData(userID, categoryName);
@@ -28,11 +29,6 @@ async function generatePrompt(userData, question, categoryName, mode) {
     - Weekly spending limit for ${categoryName}: $${WeeklyLimit}
     - Amount spent so far in ${categoryName}: $${TotalSpent}
     - Remaining budget for ${categoryName}: $${remainingBudget}`;
-
-  // Check if purchasing the item would exceed the category budget
-  if (remainingBudget < itemPrice) {
-    systemPrompt += `\nWarning: Purchasing this item for $${itemPrice} would exceed the budget for the ${categoryName} category.`;
-  }
 
   switch (mode) {
     case "Fun":
@@ -55,7 +51,7 @@ async function generatePrompt(userData, question, categoryName, mode) {
       systemPrompt += "\nProvide balanced, professional financial advice.";
   }
 
-  const userPrompt = `Should I spend $${itemPrice} on ${question}? Please check if it fits within the budget for the ${categoryName} category and provide a short answer within 1-2 sentences.`;
+  const userPrompt = `Should I spend money on ${question}? Give me a short answer within 1-2 sentences`;
 
   return {
     contents: [
@@ -71,11 +67,11 @@ async function generatePrompt(userData, question, categoryName, mode) {
   };
 }
 
-async function getAIRecommendation(userData, question, mode) {
+async function getAIRecommendation(userData, question, categoryName, mode) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    const prompt = generatePrompt(userData, question, categoryName, mode);
+    const prompt = await generatePrompt(userData, question, categoryName, mode);
 
     const result = await model.generateContent(prompt);
 
