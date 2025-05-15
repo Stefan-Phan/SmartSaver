@@ -20,6 +20,9 @@ import { Category } from "@/types/Category";
 // import icons
 import { Plus } from "lucide-react";
 
+// import sonner
+import { toast } from "sonner";
+
 // import components
 import AddTransactionModal from "../components/transaction/AddTransactionModal";
 import Pagination from "../components/transaction/Pagination";
@@ -66,7 +69,7 @@ function TransactionPage() {
 
       const socket = initSocket();
       socket.on("budgetAlert", (data) => {
-        alert(data.message);
+        toast.warning(data.message);
       });
 
       return () => {

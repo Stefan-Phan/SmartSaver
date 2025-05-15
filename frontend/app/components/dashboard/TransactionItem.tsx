@@ -17,11 +17,14 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
-      <div>
-        <h6 className="font-semibold text-gray-700">{transaction.Name}</h6>
-        <p className="text-gray-500 text-sm">{transaction.Date}</p>
-      </div>
-      <p className={`font-bold ${amountColor}`}>
+      <h6 className="font-semibold text-gray-700">{transaction.Name}</h6>
+      <p
+        className={`font-medium ${
+          transaction.Type.toLocaleLowerCase() === "income"
+            ? "text-green-600"
+            : "text-red-600"
+        }`}
+      >
         {amountPrefix}${transaction.Amount}
       </p>
     </div>

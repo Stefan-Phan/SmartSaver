@@ -199,29 +199,24 @@ const DashboardPage: React.FC = () => {
           {/* Balance Card */}
           <div className="bg-white shadow rounded-lg p-4">
             <h4 className="text-lg font-semibold mb-2">Your Balance</h4>
-            <h1
-              id="balance"
+            <p
               className={`text-3xl font-bold ${
                 totalBalance >= 0 ? "text-green-500" : "text-red-500"
               }`}
             >
               ${totalBalance}
-            </h1>
+            </p>
           </div>
 
           {/* Income Card */}
           <div className="bg-white shadow rounded-lg p-4">
-            <h4 className="text-md font-semibold uppercase text-gray-600">
-              Total Income
-            </h4>
+            <h4 className="text-lg font-semibold mb-2">Total Income</h4>
             <p className="text-3xl font-bold text-green-500">+${incomeTotal}</p>
           </div>
 
           {/* Expense Card */}
           <div className="bg-white shadow rounded-lg p-4">
-            <h4 className="text-md font-semibold uppercase text-gray-600">
-              Total Expense
-            </h4>
+            <h4 className="text-lg font-semibold mb-2">Total Expense</h4>
             <p className="text-3xl font-bold text-red-500">-${expenseTotal}</p>
           </div>
         </div>

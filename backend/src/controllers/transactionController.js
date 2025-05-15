@@ -112,7 +112,7 @@ exports.addTransaction = (req, res) => {
                 spent: newTotalSpent.toFixed(2),
                 limit: weeklyLimit.toFixed(2),
                 percentage: Math.round(spentPercentage),
-                message: `⚠️ You’ve spent $${newTotalSpent.toFixed(
+                message: `You’ve spent $${newTotalSpent.toFixed(
                   2
                 )} of your $${weeklyLimit.toFixed(
                   2
