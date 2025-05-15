@@ -11,8 +11,9 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = await loginUser(email, password);
+      const { token, userId } = await loginUser(email, password);
       localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
       window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err.message);

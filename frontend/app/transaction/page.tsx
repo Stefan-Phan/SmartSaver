@@ -7,9 +7,11 @@ import {
   getTransactions,
   addTransaction,
   deleteTransaction,
-  updateTransaction,
   getCategories,
 } from "../../lib/api/transactionAPI";
+
+// import socket
+import { initSocket, getSocket } from "@/lib/socket/socket";
 
 // import types
 import { Transaction } from "@/types/Transaction";
@@ -54,11 +56,24 @@ function TransactionPage() {
   }, [token]);
 
   useEffect(() => {
-    // Calculate total pages whenever transactions change
     setTotalPages(Math.ceil(transactions.length / transactionsPerPage));
-    // Reset to first page when transactions change
-    setCurrentPage(1);
   }, [transactions, transactionsPerPage]);
+
+  useEffect(() => {
+    if (token) {
+      fetchTransactions();
+      fetchCategories();
+
+      const socket = initSocket();
+      socket.on("budgetAlert", (data) => {
+        alert(data.message);
+      });
+
+      return () => {
+        socket.off("budgetAlert");
+      };
+    }
+  }, [token]);
 
   const fetchTransactions = async () => {
     try {
@@ -79,8 +94,6 @@ function TransactionPage() {
   };
 
   const handleDeleteTransaction = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) return;
-
     try {
       await deleteTransaction(token, id);
       fetchTransactions();

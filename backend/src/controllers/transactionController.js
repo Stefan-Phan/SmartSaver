@@ -78,7 +78,7 @@ exports.addTransaction = (req, res) => {
 
       const CategoryID = categoryResult[0].ID;
       const currentTotalSpent = categoryResult[0].TotalSpent || 0;
-      const weeklyLimit = parseFloat(categoryResult[0].weeklyLimit) || 0;
+      const weeklyLimit = parseFloat(categoryResult[0].WeeklyLimit) || 0;
       const expenseAmount = Math.abs(Amount);
 
       const sql =
@@ -104,15 +104,23 @@ exports.addTransaction = (req, res) => {
           const spentPercentage = (newTotalSpent / weeklyLimit) * 100;
 
           if (spentPercentage >= 50) {
+            console.log("Sending budget alert to user:", userID);
             getIO()
-              .to(userID)
+              .to(userID.toString())
               .emit("budgetAlert", {
                 category: CategoryName,
-                message: `⚠️ You've spent over 50% of your weekly budget for ${CategoryName}`,
                 spent: newTotalSpent.toFixed(2),
                 limit: weeklyLimit.toFixed(2),
                 percentage: Math.round(spentPercentage),
+                message: `⚠️ You’ve spent $${newTotalSpent.toFixed(
+                  2
+                )} of your $${weeklyLimit.toFixed(
+                  2
+                )} weekly budget on ${CategoryName} (${Math.round(
+                  spentPercentage
+                )}%).`,
               });
+            console.log("Budget alert sent!");
           }
         }
 

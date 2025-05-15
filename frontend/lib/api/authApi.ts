@@ -26,20 +26,26 @@ export const registerUser = async (
 export const loginUser = async (
   email: string,
   password: string
-): Promise<string> => {
+): Promise<{ token: string; userId: string }> => {
   try {
     const response = await axios.post(`${API_BASE_URL}/login`, {
       email,
       password,
     });
-    return response.data.token;
+
+    const { token, userId } = response.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", userId);
+
+    return { token, userId };
   } catch (error: any) {
     const message =
       error.response?.data?.message ||
       error.response?.data?.error ||
       "Login failed";
 
-    if (message.includes("coundn't find an account")) {
+    if (message.includes("couldn't find an account")) {
       throw new Error("We couldn't find an account with that email");
     } else if (message.includes("Incorrect password")) {
       throw new Error("Incorrect password. Please try again");
