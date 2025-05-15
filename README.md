@@ -1,61 +1,83 @@
 # SmartSaver - Your AI-powered Money Tracker
 
-## About the Project
+SmartSaver is a full-stack web application developed during a Hackathon by a team of three members. It helps users efficiently manage their personal finances through expense tracking, savings calculation, and AI-driven financial advice. Users can even customize the tone of the AI assistant to make interactions more fun and engaging.
 
-SmartSaver is a full-stack web application designed to help users efficiently manage their finances. The inspiration for this project came from personal struggles with tracking expenses and understanding spending habits. The app provides a user-friendly way to monitor income, expenses, and savings, and offers AI-powered insights to help users make informed financial decisions.
+---
 
-The key features include:
+## 🚀 Project Overview
 
-- **Expense Tracking:** Categorize and monitor spending.
-- **Daily Notifications:** Receive updates on spending habits, income, and savings.
-- **AI Integration:** Get AI-driven advice on spending decisions based on your financial situation.
-- **Savings Calculation:** Automatically calculate savings based on income.
-- **Customizable Settings:** Adjust app settings to align with specific financial goals.
+SmartSaver was inspired by the need to better understand and control personal spending habits. It combines traditional expense tracking with cutting-edge AI features for a smarter and more interactive money management experience.
 
-## Tech Stack
+**Key Features:**
 
-- **Frontend:** Next.js
-- **Backend:** Node.js, Express
-- **Database:** MySQL
+- 💸 **Expense Tracking:** Categorize and monitor your spending across various categories.
+- 🔔 **Daily Notifications:** Stay updated on your financial habits using **Sonner** notifications.
+- 📊 **Financial Visualization:** View trends with charts powered by **react-chartjs-2**.
+- 🧠 **AI-powered Advice (Google Gemini):** Receive context-aware, personalized financial suggestions powered by Retrieval-Augmented Generation (RAG).
+- 🎭 **Tone Modulation:** Choose your AI assistant's personality – serious, friendly, funny, or even angry!
+- 💰 **Savings Calculation:** Automatically track your savings based on income and expenses.
+- 🔐 **Secure Login System:** Uses **bcrypt** for password hashing and **JWT** for session management.
+- ⚙️ **Custom Settings:** Tailor the app to your personal financial goals.
+- 🔄 **Socket.IO:** Real-time notifications when spending exceeds set thresholds (e.g., 50% of a weekly category budget).
 
-Why MySQL?
+---
 
-While the MERN stack is a popular choice, the team chose MySQL due to their existing comfort level and experience with it from university. It proved to be a suitable solution for the project's needs.
+## 🛠 Tech Stack
 
-## What We Learned
+| Layer      | Technology                 |
+| ---------- | -------------------------- |
+| Frontend   | React, Next.js             |
+| Backend    | Node.js, Express           |
+| Database   | MySQL                      |
+| AI Service | Google Gemini AI           |
+| Realtime   | Socket.IO                  |
+| Charts     | react-chartjs-2 + Chart.js |
+| Alerts     | Sonner                     |
+| Auth       | JWT, bcrypt                |
 
-This project provided valuable experience in building a full-stack application from the ground up. Key takeaways include:
+---
 
-- Understanding the complete flow of data from the frontend to the backend and database.
-- Gaining practical experience in integrating different technologies.
-- Learning to overcome challenges in UI implementation and AI integration.
+## 📚 What We Learned
 
-## Challenges Faced
+- Built a full-stack app from the ground up
+- Gained hands-on experience with AI and RAG concepts
+- Learned how to design and simplify UI from Figma to code
+- Understood the importance of limiting unnecessary backend endpoints
+- Strengthened security and visualization features
 
-- **UI Implementation:** Translating a detailed Figma design into a React application proved challenging due to the team's limited React experience. The design was simplified while maintaining a clean and functional user interface.
-- **AI Integration:** Integrating AI features required creative problem-solving to provide relevant and helpful financial recommendations.
+---
 
-## Conclusion
+## ❗ Challenges Faced
 
-SmartSaver is a rewarding project that addresses a real-world problem and provides a practical tool for managing personal finances. The team gained valuable experience in full-stack development and is excited to continue improving the app and adding new features.
+- **UI Implementation:** Translating complex Figma designs into responsive React components with limited React experience.
+- **Backend Overengineering:** Initially created too many endpoints, later cleaned up for simplicity.
+- **AI Integration:** Making AI recommendations accurate and relevant to user data required thoughtful implementation.
 
-## How to set up and use the project
+---
 
-1.  Download the code.
-2.  Navigate to the backend: `cd backend`
-3.  Start the backend server: `node index.js`
-4.  Navigate to the frontend: `cd frontend`
-5.  Start the frontend development server: `npm run dev`
+## 📂 Project Structure
 
-The application will be accessible in your browser.
+## 🧪 How to Set Up and Run Locally
 
-## Application Routes
+### 1. Clone the Repository
 
-- `/`: Login page
-- `/register`: Registration page
-- `/dashboard`: User dashboard
-- `/transaction`: Transaction management
-- `/category`: Category management
-- `/ask-ai`: AI-powered financial advice
-- `/user-profile`: User profile management
-- `...` (Other routes as needed)
+```bash
+git clone https://github.com/your-username/smartsaver.git
+cd smartsaver
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+npm install
+node index.js
+```
+
+### 3. Frontend Setup
+
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
