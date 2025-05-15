@@ -185,7 +185,7 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <div className="p-6 w-3/4">
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">

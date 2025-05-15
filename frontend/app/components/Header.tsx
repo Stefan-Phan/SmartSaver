@@ -5,24 +5,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 // import icons
-import {
-  Gauge,
-  List,
-  PlusCircle,
-  User,
-  Bot,
-  LogIn,
-  LogOut,
-} from "lucide-react";
+import { Gauge, List, PlusCircle, Bot, LogIn, LogOut } from "lucide-react";
 
 const Header: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
-  }, [token]);
+    setToken(localStorage.getItem("token"));
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (e.clientY <= 50) {
+        setVisible(true);
+      } else {
+        setVisible(false);
+      }
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    return () => document.removeEventListener("mousemove", onMouseMove);
+  }, []);
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -31,7 +35,14 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow sticky top-0 z-50">
+    <header
+      className={`
+        fixed left-0 right-0 top-0 z-50
+        bg-white shadow
+        transform transition-transform duration-300
+        ${visible ? "translate-y-0" : "-translate-y-full"}
+      `}
+    >
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <Link href="/dashboard">
@@ -39,8 +50,6 @@ const Header: React.FC = () => {
               SmartSaver
             </div>
           </Link>
-
-          {/* Navigation Links */}
           <nav className="flex space-x-4 items-center">
             {token ? (
               <>
