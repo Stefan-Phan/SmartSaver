@@ -55,8 +55,6 @@ SmartSaver was inspired by the need to better understand and control personal sp
 
 ---
 
-## 📂 Project Structure
-
 ## 🧪 How to Set Up and Run Locally
 
 ### 1. Clone the Repository
