@@ -2,8 +2,6 @@
 
 SmartSaver is a full-stack web application developed during a Hackathon by a team of three members. It helps users efficiently manage their personal finances through expense tracking, savings calculation, and AI-driven financial advice. Users can even customize the tone of the AI assistant to make interactions more fun and engaging.
 
----
-
 ## 🚀 Project Overview
 
 SmartSaver was inspired by the need to better understand and control personal spending habits. It combines traditional expense tracking with cutting-edge AI features for a smarter and more interactive money management experience.
@@ -20,8 +18,6 @@ SmartSaver was inspired by the need to better understand and control personal sp
 - ⚙️ **Custom Settings:** Tailor the app to your personal financial goals.
 - 🔄 **Socket.IO:** Real-time notifications when spending exceeds set thresholds (e.g., 50% of a weekly category budget).
 
----
-
 ## 🛠 Tech Stack
 
 | Layer      | Technology                 |
@@ -35,8 +31,6 @@ SmartSaver was inspired by the need to better understand and control personal sp
 | Alerts     | Sonner                     |
 | Auth       | JWT, bcrypt                |
 
----
-
 ## 📚 What We Learned
 
 - Built a full-stack app from the ground up
@@ -45,15 +39,11 @@ SmartSaver was inspired by the need to better understand and control personal sp
 - Understood the importance of limiting unnecessary backend endpoints
 - Strengthened security and visualization features
 
----
-
 ## ❗ Challenges Faced
 
 - **UI Implementation:** Translating complex Figma designs into responsive React components with limited React experience.
 - **Backend Overengineering:** Initially created too many endpoints, later cleaned up for simplicity.
 - **AI Integration:** Making AI recommendations accurate and relevant to user data required thoughtful implementation.
-
----
 
 ## 🧪 How to Set Up and Run Locally
 
